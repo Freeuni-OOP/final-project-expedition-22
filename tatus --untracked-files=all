@@ -1,0 +1,31 @@
+A	.idea/.gitignore
+A	.idea/final-project-expedition-22.iml
+A	.idea/gradle.xml
+A	.idea/misc.xml
+A	.idea/modules.xml
+A	.idea/vcs.xml
+R100	exp_22/.gitattributes	BookstoreProject/.gitattributes
+R100	exp_22/.gitignore	BookstoreProject/.gitignore
+A	BookstoreProject/build.gradle
+R100	exp_22/gradle/wrapper/gradle-wrapper.jar	BookstoreProject/gradle/wrapper/gradle-wrapper.jar
+R100	exp_22/gradle/wrapper/gradle-wrapper.properties	BookstoreProject/gradle/wrapper/gradle-wrapper.properties
+R099	exp_22/gradlew	BookstoreProject/gradlew
+R100	exp_22/gradlew.bat	BookstoreProject/gradlew.bat
+A	BookstoreProject/settings.gradle
+R060	exp_22/src/main/java/com/example/exp_22/Exp22Application.java	BookstoreProject/src/main/java/com/example/bookstore/BookstoreApplication.java
+R100	Test	BookstoreProject/src/main/java/com/example/bookstore/config/.gitkeep
+A	BookstoreProject/src/main/java/com/example/bookstore/controller/.gitkeep
+A	BookstoreProject/src/main/java/com/example/bookstore/dto/.gitkeep
+A	BookstoreProject/src/main/java/com/example/bookstore/entity/Book.java
+A	BookstoreProject/src/main/java/com/example/bookstore/entity/User.java
+A	BookstoreProject/src/main/java/com/example/bookstore/repository/.gitkeep
+A	BookstoreProject/src/main/java/com/example/bookstore/security/.gitkeep
+A	BookstoreProject/src/main/java/com/example/bookstore/service/.gitkeep
+A	BookstoreProject/src/main/resources/application.properties
+R072	exp_22/src/test/java/com/example/exp_22/Exp22ApplicationTests.java	BookstoreProject/src/test/java/com/example/exp_22/Exp22ApplicationTests.java
+A	BookstoreProject/target/classes/application.properties
+D	exp_22/build.gradle
+D	exp_22/settings.gradle
+D	exp_22/src/main/java/Book.java
+D	exp_22/src/main/java/User.java
+D	exp_22/src/main/resources/application.properties
