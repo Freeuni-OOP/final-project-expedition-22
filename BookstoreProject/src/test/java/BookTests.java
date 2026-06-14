@@ -3,6 +3,8 @@
 import com.example.bookstore.entity.Book;
 import com.example.bookstore.entity.User;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -48,7 +50,7 @@ class BookTest {
     }
 
     @Test
-    void testEqualsAndHashCodeForUnsavedEntities() {
+    void testEqualsAndHashCode() {
         Book book1 = new Book();
         Book book2 = new Book();
 
@@ -61,15 +63,29 @@ class BookTest {
     }
 
     @Test
+    void testEqualsWithSameId() throws Exception {
+        Book book1 = new Book();
+        Book book2 = new Book();
+
+        java.lang.reflect.Field idField = Book.class.getDeclaredField("id");
+        idField.setAccessible(true);
+
+        idField.set(book1, 1L);
+        idField.set(book2, 1L);
+
+        assertEquals(book1, book2);
+    }
+
+    @Test
     void testToString() {
         User mockSeller = new User();
         Book book = new Book("Java", new BigDecimal("40.00"), mockSeller, true);
-        book.setReleaseYear(2018);
+        book.setReleaseYear(2022);
 
         String result = book.toString();
 
         assertTrue(result.contains("Java"));
-        assertTrue(result.contains("2018"));
+        assertTrue(result.contains("2022"));
 
         assertFalse(result.contains("seller="));
     }
@@ -89,4 +105,18 @@ class BookTest {
 
         assertEquals(Seller , book.getSeller());
     }
+
+    @Test
+    void testOnCreateSetsCreatedAt() throws Exception {
+        Book book = new Book();
+
+        assertNull(book.getCreatedAt());
+
+        Method method = Book.class.getDeclaredMethod("onCreate");
+        method.setAccessible(true);
+        method.invoke(book);
+
+        assertNotNull(book.getCreatedAt());
+    }
+
 }
