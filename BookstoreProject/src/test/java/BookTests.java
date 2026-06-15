@@ -1,12 +1,16 @@
 
 
+import com.example.bookstore.entity.Author;
 import com.example.bookstore.entity.Book;
+import com.example.bookstore.entity.Genre;
 import com.example.bookstore.entity.User;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -102,6 +106,19 @@ class BookTest {
 
         book.setIsAvailable(false);
         assertFalse(book.getIsAvailable());
+
+        Genre genre1 = new Genre("fantasy");
+        Set<Genre> genres = new HashSet<>();
+        genres.add(genre1);
+        book.setGenres(genres);
+
+        assertTrue(book.getGenres().contains(genre1));
+
+        Author author1 = new Author("Dostoevsky");
+        Set<Author> authors = new HashSet<>();
+        authors.add(author1);
+        book.setAuthors(authors);
+        assertTrue(book.getAuthors().contains(author1));
 
         assertEquals(Seller , book.getSeller());
     }

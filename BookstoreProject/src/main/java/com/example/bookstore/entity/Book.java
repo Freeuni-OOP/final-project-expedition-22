@@ -3,6 +3,8 @@ package com.example.bookstore.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "book_listings")
@@ -37,6 +39,22 @@ public class Book {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "book_genres",
+            joinColumns = @JoinColumn(name = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "genre_id")
+    )
+    private Set<Genre> genres = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "book_authors",
+            joinColumns = @JoinColumn(name = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "author_id")
+    )
+    private Set<Author> authors = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {
@@ -121,6 +139,14 @@ public class Book {
         this.releaseYear = releaseYear;
     }
 
+    public Set<Genre> getGenres() {return genres;}
+
+    public void setGenres(Set<Genre> genres) {this.genres = genres;}
+
+    public Set<Author> getAuthors() {return authors;}
+
+    public void setAuthors(Set<Author> authors) {this.authors = authors;}
+
 
     @Override
     public String toString() {
@@ -149,5 +175,7 @@ public class Book {
     public int hashCode() {
         return getClass().hashCode();
     }
+
+
 
 }
