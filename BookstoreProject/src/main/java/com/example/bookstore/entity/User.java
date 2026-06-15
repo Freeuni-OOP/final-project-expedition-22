@@ -3,7 +3,8 @@ package com.example.bookstore.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -13,21 +14,25 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    //username of user
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
 
-    //password of user
+    @Column(name = "password", nullable = false)
     private String password;
 
-    //phone number of user
+    @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
-    //time user was created
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    //user's favourite books
     @ManyToMany
-    private List<Book> favouritBooks;
+    @JoinTable(
+            name = "user_favorites",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "book_id")
+    )
+    private Set<Book> favouriteBooks = new HashSet<>();
 
     public User() {
     }
@@ -75,11 +80,11 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    public List<Book> getFavouritBooks() {
-        return favouritBooks;
+    public Set<Book> getFavouriteBooks() {
+        return favouriteBooks;
     }
 
-    public void setFavouritBooks(List<Book> favouritBooks) {
-        this.favouritBooks = favouritBooks;
+    public void setFavouriteBooks(Set<Book> favouriteBooks) {
+        this.favouriteBooks = favouriteBooks;
     }
 }
