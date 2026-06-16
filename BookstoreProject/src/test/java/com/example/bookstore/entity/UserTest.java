@@ -17,6 +17,7 @@ class UserTest {
         assertEquals("john", user.getUsername());
         assertEquals("password123", user.getPassword());
         assertEquals("555123456", user.getPhoneNumber());
+        assertEquals("gagasdh@gmail.com", user.getEmail());
         assertNotNull(user.getCreatedAt());
         assertNotNull(user.getFavouriteBooks());
         assertTrue(user.getFavouriteBooks().isEmpty());
@@ -31,12 +32,14 @@ class UserTest {
         user.setUsername("john");
         user.setPassword("newPassword");
         user.setPhoneNumber("599123456");
+        user.setEmail("gmail@gmail.com");
         user.setCreatedAt(now);
         user.setFavouriteBooks(favouriteBooks);
 
         assertEquals("john", user.getUsername());
         assertEquals("newPassword", user.getPassword());
         assertEquals("599123456", user.getPhoneNumber());
+        assertEquals("gmail@gmail.com", user.getEmail());
         assertEquals(now, user.getCreatedAt());
         assertEquals(favouriteBooks, user.getFavouriteBooks());
     }
