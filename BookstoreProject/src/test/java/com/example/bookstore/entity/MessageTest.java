@@ -19,12 +19,10 @@ public class MessageTest {
         String text = "Hi";
         Message message = new Message(Room, Sender, text);
 
-        assertAll(
-                () -> assertEquals(Room, message.getChatRoom()),
-                () -> assertEquals(Sender, message.getSender()),
-                () -> assertEquals(text, message.getMessageText()),
-                () -> assertFalse(message.isRead(), "new message  should be false on default")
-        );
+        assertEquals(Room, message.getChatRoom());
+        assertEquals(Sender, message.getSender());
+        assertEquals(text, message.getMessageText());
+        assertFalse(message.isRead(), "new message  should be false on default");
     }
 
     @Test

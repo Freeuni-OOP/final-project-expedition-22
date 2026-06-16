@@ -15,13 +15,11 @@ public class ChatRoomTest {
         LocalDateTime now = LocalDateTime.now();
         ChatRoom chatRoom = new ChatRoom(buyer, seller, now);
 
-        assertAll(
-                () -> assertEquals(buyer, chatRoom.getBuyer(), "Buyer was not saved correctly"),
-                () -> assertEquals(seller, chatRoom.getSender(), "seller was not saved correctly"),
-                () -> assertEquals(now, chatRoom.getCreatedAt(), "Time was not saved correctly"),
-                () -> assertNull(chatRoom.getId(), "new room should not have id before database"),
-                () -> assertNull(chatRoom.getMessages(), "for new chat room list of messages should be null")
-        );
+        assertEquals(buyer, chatRoom.getBuyer(), "Buyer was not saved correctly");
+        assertEquals(seller, chatRoom.getSender(), "seller was not saved correctly");
+        assertEquals(now, chatRoom.getCreatedAt(), "Time was not saved correctly");
+        assertNull(chatRoom.getId(), "new room should not have id before database");
+        assertNull(chatRoom.getMessages(), "for new chat room list of messages should be null");
     }
 
     @Test
@@ -65,11 +63,9 @@ public class ChatRoomTest {
         LocalDateTime createdAt = LocalDateTime.now().minusDays(2);
         ChatRoom chatRoom = new ChatRoom(buyer, seller, createdAt);
 
-        assertAll(
-                () -> assertEquals(buyer, chatRoom.getBuyer(), "Buyer's getter returned wrong buyer"),
-                () -> assertEquals(seller, chatRoom.getSender(), "Sender's getter returned wrong seller"),
-                () -> assertEquals(createdAt, chatRoom.getCreatedAt(), "CreatedAt's getter returned wrong time")
-        );
+        assertEquals(buyer, chatRoom.getBuyer(), "Buyer's getter returned wrong buyer");
+        assertEquals(seller, chatRoom.getSender(), "Sender's getter returned wrong seller");
+        assertEquals(createdAt, chatRoom.getCreatedAt(), "CreatedAt's getter returned wrong time");
     }
 
     @Test
