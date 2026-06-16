@@ -1,9 +1,5 @@
+package com.example.bookstore.entity;
 
-
-import com.example.bookstore.entity.Author;
-import com.example.bookstore.entity.Book;
-import com.example.bookstore.entity.Genre;
-import com.example.bookstore.entity.User;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;

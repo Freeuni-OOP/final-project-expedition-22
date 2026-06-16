@@ -15,7 +15,7 @@ class UserRepositoryTest {
 
     @Test
     void SaveUser() {
-        User user = new User("jhon", "password123", "555123456");
+        User user = new User("jhon", "password123", "555123456", "gagasdh@gmail.com");
 
         User savedUser = userRepository.save(user);
 
@@ -25,7 +25,7 @@ class UserRepositoryTest {
 
     @Test
     void FindUserById() {
-        User user = new User("jhon", "password123", "599123456");
+        User user = new User("jhon", "password123", "599123456", "gagasdh@gmail.com");
         User savedUser = userRepository.save(user);
 
         User foundUser = userRepository.findById(savedUser.getId()).orElse(null);
@@ -36,7 +36,7 @@ class UserRepositoryTest {
 
     @Test
     void DeleteUser() {
-        User user = new User("nino", "password123", "577123456");
+        User user = new User("nino", "password123", "577123456", "gagasdh@gmail.com");
         User savedUser = userRepository.save(user);
 
         userRepository.deleteById(savedUser.getId());
