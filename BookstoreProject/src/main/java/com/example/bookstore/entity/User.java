@@ -17,6 +17,9 @@ public class User {
     @Column(name = "username", nullable = false, unique = true)
     private String username;
 
+    @Column(name = "email", nullable = false, unique = true)
+    private String email;
+
     @Column(name = "password", nullable = false)
     private String password;
 
@@ -24,7 +27,7 @@ public class User {
     private String phoneNumber;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToMany
     @JoinTable(
@@ -37,7 +40,8 @@ public class User {
     public User() {
     }
 
-    public User(String username, String password, String phoneNumber) {
+    public User(String username, String password, String phoneNumber, String email) {
+        this.email=email;
         this.username = username;
         this.password = password;
         this.phoneNumber = phoneNumber;
@@ -87,4 +91,13 @@ public class User {
     public void setFavouriteBooks(Set<Book> favouriteBooks) {
         this.favouriteBooks = favouriteBooks;
     }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
 }

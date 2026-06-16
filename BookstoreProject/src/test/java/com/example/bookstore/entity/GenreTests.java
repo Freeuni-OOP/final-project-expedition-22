@@ -1,7 +1,5 @@
+package com.example.bookstore.entity;
 
-import com.example.bookstore.entity.Book;
-import com.example.bookstore.entity.Genre;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;

@@ -12,7 +12,7 @@ class UserTest {
 
     @Test
     void CreateUserWithConstructor() {
-        User user = new User("john", "password123", "555123456");
+        User user = new User("john", "password123", "555123456", "gagasdh@gmail.com");
 
         assertEquals("john", user.getUsername());
         assertEquals("password123", user.getPassword());

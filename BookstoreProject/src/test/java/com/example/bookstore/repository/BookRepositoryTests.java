@@ -1,9 +1,9 @@
+package com.example.bookstore.repository;
 
 import com.example.bookstore.entity.Author;
 import com.example.bookstore.entity.Book;
 import com.example.bookstore.entity.Genre;
 import com.example.bookstore.entity.User;
-import com.example.bookstore.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +39,7 @@ class BookRepositoryTest {
         seller.setUsername("john_doe");
         seller.setEmail("john@example.com");
         seller.setPassword("password123");
+        seller.setPhoneNumber("593-223-324");
         entityManager.persist(seller);
 
         fiction = new Genre("Fiction");

@@ -1,6 +1,5 @@
+package com.example.bookstore.entity;
 
-import com.example.bookstore.entity.Author;
-import com.example.bookstore.entity.Book;
 import org.junit.jupiter.api.Test;
 import java.util.HashSet;
 import java.util.Set;
