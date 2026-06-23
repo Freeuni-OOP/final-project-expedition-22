@@ -9,7 +9,7 @@ public class RegisterRequest {
 
     @NotBlank(message = "username should not be empty")
     @Size(min = 4, max = 20, message = "username length should be between 4 and 20 symbols")
-    @Pattern(regexp = "^[^@]+$", message = "username should not contain '@' symbol")
+    @Pattern(regexp = "^[^@]*$", message = "username should not contain '@' symbol")
     private String username;
 
     @NotBlank(message = "password should not be empty")
