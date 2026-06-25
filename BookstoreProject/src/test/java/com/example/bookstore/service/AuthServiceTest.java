@@ -127,4 +127,51 @@ class AuthServiceTest {
         assertTrue(response.isSuccess());
         assertEquals("Login successful", response.getMessage());
     }
+
+    @Test
+    void registerShouldFailWhenPhoneNumberAlreadyExists() {
+        RegisterRequest request = new RegisterRequest(
+                "john",
+                "password123",
+                "599123456",
+                "john@example.com"
+        );
+
+        when(userRepository.findByUsername("john"))
+                .thenReturn(Optional.empty());
+
+        when(userRepository.findByPhoneNumber("599123456"))
+                .thenReturn(Optional.of(new User()));
+
+        RegisterResponse response = authService.register(request);
+
+        assertFalse(response.isSuccess());
+        assertEquals("PhoneNumber already in use", response.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void registerShouldFailWhenEmailAlreadyExists() {
+        RegisterRequest request = new RegisterRequest(
+                "john",
+                "password123",
+                "599123456",
+                "john@example.com"
+        );
+
+        when(userRepository.findByUsername("john"))
+                .thenReturn(Optional.empty());
+
+        when(userRepository.findByPhoneNumber("599123456"))
+                .thenReturn(Optional.empty());
+
+        when(userRepository.findByEmail("john@example.com"))
+                .thenReturn(Optional.of(new User()));
+
+        RegisterResponse response = authService.register(request);
+
+        assertFalse(response.isSuccess());
+        assertEquals("Email already in use", response.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
 }
