@@ -25,6 +25,14 @@ public class AuthService {
             return new RegisterResponse(false, "Username already exists");
         }
 
+        if (userRepository.findByPhoneNumber(request.getPhoneNumber()).isPresent()) {
+            return new RegisterResponse(false, "PhoneNumber already in use");
+        }
+
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            return new RegisterResponse(false, "Email already in use");
+        }
+
         User user = new User(
                 request.getUsername(),
                 passwordEncoder.encode(request.getPassword()),
