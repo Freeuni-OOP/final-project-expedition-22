@@ -327,7 +327,6 @@ class BookRepositoryTest {
         createBook("Animal Farm", new BigDecimal("8.00"), true);
         entityManager.flush();
 
-        // ვეძებთ პატარა ასოებით "gats"
         List<Book> found = bookRepository.findByTitleContainingIgnoreCase("gats");
 
         assertThat(found).hasSize(2);
@@ -337,7 +336,6 @@ class BookRepositoryTest {
 
     @Test
     void findFavoriteBooksByUserId_returnsBooks_likedByUser() {
-        // ვქმნით ახალ იუზერს, რომელიც დააფავორიტებს წიგნს
         User buyer = new User();
         buyer.setUsername("buyer_jane");
         buyer.setEmail("jane@example.com");
@@ -346,7 +344,6 @@ class BookRepositoryTest {
 
         Book book = createBook("Pride and Prejudice", new BigDecimal("7.50"), true);
 
-        // ვამატებთ იუზერს ფავორიტებში ამ წიგნს (დავუშვათ User კლასს აქვს setFavouriteBooks)
         buyer.setFavouriteBooks(Set.of(book));
         entityManager.persist(buyer);
         entityManager.flush();
