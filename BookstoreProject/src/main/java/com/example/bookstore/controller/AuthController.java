@@ -1,7 +1,6 @@
 package com.example.bookstore.controller;
 
 import com.example.bookstore.dto.RegisterRequest;
-import com.example.bookstore.repository.UserRepository;
 import com.example.bookstore.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,43 +20,39 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-    @Autowired
-    private UserRepository userRepository;
-
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest request, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
 
             for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.put(error.getField(), error.getDefaultMessage());
+                if (error.getCode().equals("NotBlank")) {
+                    errors.put(error.getField(), error.getDefaultMessage());
+                }
+            }
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                if (!errors.containsKey(error.getField())) {
+                    errors.put(error.getField(), error.getDefaultMessage());
+                }
             }
             return ResponseEntity.badRequest().body(errors);
         }
 
-
-        if (userRepository.existsByUsername(request.getUsername())) {
-            Map<String, String> errors = new HashMap<>();
-            errors.put("username", "ეს მომხმარებლის სახელი უკვე დაკავებულია");
-            return ResponseEntity.badRequest().body(errors);
-        }
-
-        if (userRepository.existsByEmail(request.getEmail())) {
-            Map<String, String> errors = new HashMap<>();
-            errors.put("email", "ეს ელ-ფოსტა უკვე რეგისტრირებულია");
-            return ResponseEntity.badRequest().body(errors);
-        }
-
-        if (userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
-            Map<String, String> errors = new HashMap<>();
-            errors.put("phoneNumber", "ეს ტელეფონის ნომერი უკვე გამოყენებულია");
-            return ResponseEntity.badRequest().body(errors);
-        }
         try {
             authService.register(request);
-            return ResponseEntity.ok(Map.of("message", "Success"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+
+            Map<String, String> successResponse = new HashMap<>();
+            successResponse.put("message", "რეგისტრაცია წარმატებით დასრულდა!");
+            return ResponseEntity.ok(successResponse);
+
+        } catch (IllegalArgumentException e) {
+            String[] parts = e.getMessage().split(":", 2);
+            String field = parts[0];
+            String message = parts[1];
+
+            Map<String, String> errors = new HashMap<>();
+            errors.put(field, message);
+            return ResponseEntity.badRequest().body(errors);
         }
     }
 }

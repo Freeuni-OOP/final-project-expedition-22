@@ -41,6 +41,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 
         } else {
             const errorsMap = await response.json();
+
             for (let fieldName in errorsMap) {
                 const errorDiv = document.getElementById(`${fieldName}-error`);
                 if (errorDiv) {
@@ -49,16 +50,20 @@ document.getElementById('registerForm').addEventListener('submit', async functio
                 }
             }
 
-            const firstVisibleError = Array.from(document.querySelectorAll('.input-error'))
-                .find(div => div.textContent.trim() !== "");
+            const fields = ['username', 'password', 'phoneNumber', 'email'];
 
-            if (firstVisibleError) {
-                firstVisibleError.style.display = 'block';
-            } else {
-                const firstKey = Object.keys(errorsMap)[0];
-                messageBox.textContent = errorsMap[firstKey] || "შეცდომა რეგისტრაციისას!";
-                messageBox.style.color = "red";
-            }
+            fields.forEach(field => {
+                const inputElement = document.getElementById(field);
+                const errorDiv = document.getElementById(`${field}-error`);
+
+                if (errorDiv && errorsMap[field]) {
+                    if (inputElement && inputElement.value.trim() === "") {
+                        errorDiv.style.display = 'block';
+                    } else {
+                        errorDiv.style.display = 'block';
+                    }
+                }
+            });
         }
 
     } catch (error) {
