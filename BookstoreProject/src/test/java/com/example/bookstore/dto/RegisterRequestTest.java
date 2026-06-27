@@ -53,7 +53,7 @@ class RegisterRequestTest {
 
         assertFalse(violations.isEmpty());
         String errorMessage = violations.iterator().next().getMessage();
-        assertEquals("phone number patter is wrong", errorMessage);
+        assertEquals("ტელეფონის ნომერი არ არის ვალიდური. მაგ: 599123456, 995599123456", errorMessage);
     }
 
     @Test

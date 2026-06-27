@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ka">
 <head>
     <meta charset="UTF-8">
     <title>Bookstore - Register</title>
@@ -10,40 +10,30 @@
 
 <div class="register-container">
     <h2>რეგისტრაცია</h2>
-    <form>
+    <form id="registerForm">
         <div class="form-group">
             <label>მომხმარებლის სახელი</label>
-            <input type="text" placeholder="ჩაწერეთ მომხმარებლის სახელი"
-                   required
-                   oninvalid="this.setCustomValidity('გთხოვთ, შეავსოთ ეს ველი')"
-                   oninput="this.setCustomValidity('')">
+            <input type="text" id="username" placeholder="ჩაწერეთ მომხმარებლის სახელი">
+            <div id="username-error" class="input-error" style="color: red;
+             font-size: 0.85rem; margin-top: 4px; display: none;"></div>
         </div>
         <div class="form-group">
             <label>პაროლი</label>
-            <input type="password" placeholder="შეიყვანეთ ძლიერი პაროლი"
-                   required
-                   oninvalid="this.setCustomValidity('გთხოვთ, შეავსოთ ეს ველი')"
-                   oninput="this.setCustomValidity('')">
+            <input type="password" id="password" placeholder="შეიყვანეთ ძლიერი პაროლი">
+            <div id="password-error" class="input-error" style="color: red; font-size: 0.85rem; margin-top: 4px; display: none;"></div>
         </div>
         <div class="form-group">
             <label>ტელეფონის ნომერი</label>
-            <input type="tel" placeholder="ჩაწერეთ თქვენი ტელეფონის ნომერი"
-                   required
-                   oninvalid="this.setCustomValidity('გთხოვთ, შეავსოთ ეს ველი')"
-                   oninput="this.setCustomValidity('')">
+            <input type="tel"  id="phoneNumber" placeholder="ჩაწერეთ თქვენი ტელეფონის ნომერი">
+            <div id="phoneNumber-error" class="input-error" style="color: red; font-size: 0.85rem; margin-top: 4px; display: none;"></div>
         </div>
         <div class="form-group">
             <label>ელ-ფოსტა</label>
-            <input type="Email" placeholder="ჩაწერეთ თქვენი ელ-ფოსტა"
-                   required
-                   oninvalid="if(this.validity.valueMissing) {
-                      this.setCustomValidity('გთხოვთ, შეავსოთ ეს ველი');
-                  } else if(this.validity.typeMismatch) {
-                      this.setCustomValidity('გთხოვთ, მიუთითოთ სწორი ელ-ფოსტის ფორმატი (მაგ: name@example.com)');
-                  }"
-                   oninput="this.setCustomValidity('')">
+            <input type="text"  id="email" placeholder="ჩაწერეთ თქვენი ელ-ფოსტა">
+            <div id="email-error" class="input-error" style="color: red; font-size: 0.85rem; margin-top: 4px; display: none;"></div>
         </div>
 
+        <div id="messageBox" style="margin-bottom: 15px; font-weight: bold;"></div>
         <button type="submit" class="btn-submit">რეგისტრაცია</button>
     </form>
 
@@ -52,5 +42,6 @@
     </p>
 
 </div>
+<script src="/js/register.js"></script>
 </body>
 </html>
