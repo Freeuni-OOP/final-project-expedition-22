@@ -6,11 +6,11 @@ import jakarta.validation.constraints.Size;
 
 public class LoginRequest {
 
-    @NotBlank(message = "Username should not be blank")
+    @NotBlank(message = "მომხმარებლის სახელი არ უნდა იყოს ცარიელი")
     private String username;
 
-    @NotBlank(message = "Password should not be blank")
-    @Size(min = 6, message = "Password should be at least 6 symbols")
+    @NotBlank(message = "პაროლი არ უნდა იყოს ცარიელი")
+    @Size(min = 6, message = "პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს")
     private String password;
 
     public LoginRequest() {}

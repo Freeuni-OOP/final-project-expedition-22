@@ -54,11 +54,11 @@ public class AuthService {
                     );
 
                     if (matches) {
-                        return new LoginResponse(true, "Login successful");
+                        return new LoginResponse(true, "შესვლა წარმატებულია");
                     }
 
-                    return new LoginResponse(false, "Invalid username or password");
+                    return new LoginResponse(false, "მომხმარებლის სახელი ან პაროლი არასწორია");
                 })
-                .orElse(new LoginResponse(false, "Invalid username or password"));
+                .orElse(new LoginResponse(false, "მომხმარებლის სახელი ან პაროლი არასწორია"));
     }
 }
