@@ -1,0 +1,101 @@
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    background-color: #ffffff;
+    padding: 15px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.navbar .logo {
+    font-size: 22px;
+    font-weight: bold;
+    color: #007bff;
+    text-decoration: none;
+}
+.navbar .nav-links {
+    display: flex;
+    align-items: center;
+}
+.navbar .nav-links a {
+    color: #555555;
+    text-decoration: none;
+    margin-left: 25px;
+    font-size: 16px;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+.navbar .nav-links a:hover {
+    color: #007bff;
+}
+.navbar .nav-links .btn-register {
+    background-color: #007bff;
+    color: #ffffff;
+    padding: 8px 18px;
+    border-radius: 4px;
+}
+.navbar .nav-links .btn-register:hover {
+    background-color: #0056b3;
+}
+
+.register-container {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    margin: 60px auto;
+}
+.register-container h2 {
+    text-align: center;
+    margin-bottom: 24px;
+    color: #333333;
+}
+.form-group {
+    margin-bottom: 16px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #555555;
+    font-size: 14px;
+}
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.form-group input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+.btn-submit {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+.btn-submit:hover {
+    background-color: #0056b3;
+}

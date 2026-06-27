@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bookstore - Register</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div data-th-replace="~{fragments/navbar :: header}"></div>
+
+<div class="register-container">
+    <h2>რეგისტრაცია</h2>
+    <form>
+        <div class="form-group">
+            <label>მომხმარებლის სახელი</label>
+            <input type="text" placeholder="ჩაწერეთ მომხმარებლის სახელი"
+                   required
+                   oninvalid="this.setCustomValidity('გთხოვთ, შეავსოთ ეს ველი')"
+                   oninput="this.setCustomValidity('')">
+        </div>
+        <div class="form-group">
+            <label>პაროლი</label>
+            <input type="password" placeholder="შეიყვანეთ ძლიერი პაროლი"
+                   required
+                   oninvalid="this.setCustomValidity('გთხოვთ, შეავსოთ ეს ველი')"
+                   oninput="this.setCustomValidity('')">
+        </div>
+        <div class="form-group">
+            <label>ტელეფონის ნომერი</label>
+            <input type="tel" placeholder="ჩაწერეთ თქვენი ტელეფონის ნომერი"
+                   required
+                   oninvalid="this.setCustomValidity('გთხოვთ, შეავსოთ ეს ველი')"
+                   oninput="this.setCustomValidity('')">
+        </div>
+        <div class="form-group">
+            <label>ელ-ფოსტა</label>
+            <input type="Email" placeholder="ჩაწერეთ თქვენი ელ-ფოსტა"
+                   required
+                   oninvalid="if(this.validity.valueMissing) {
+                      this.setCustomValidity('გთხოვთ, შეავსოთ ეს ველი');
+                  } else if(this.validity.typeMismatch) {
+                      this.setCustomValidity('გთხოვთ, მიუთითოთ სწორი ელ-ფოსტის ფორმატი (მაგ: name@example.com)');
+                  }"
+                   oninput="this.setCustomValidity('')">
+        </div>
+
+        <button type="submit" class="btn-submit">რეგისტრაცია</button>
+    </form>
+
+    <p>
+        <a th:href="@{/login}">უკვე გაქვთ ანგარიში? შესვლა</a>
+    </p>
+
+</div>
+</body>
+</html>
