@@ -11,14 +11,14 @@ document.getElementById('login-form').addEventListener('submit', async function 
         const response = await fetch('/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
             body: JSON.stringify({ username, password })
         });
 
         const data = await response.json();
 
         if (response.ok && data.success) {
-            localStorage.setItem('user', JSON.stringify(data));
-            window.location.href = '/';
+            window.location.href = '/'; // no localStorage needed — cookie persists this
             return;
         }
 
