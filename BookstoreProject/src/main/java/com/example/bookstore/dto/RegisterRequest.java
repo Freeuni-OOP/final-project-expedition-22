@@ -5,23 +5,24 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+
 public class RegisterRequest {
 
-    @NotBlank(message = "username should not be empty")
-    @Size(min = 4, max = 20, message = "username length should be between 4 and 20 symbols")
-    @Pattern(regexp = "^[^@]*$", message = "username should not contain '@' symbol")
+    @NotBlank(message = "გთხოვთ, შეიყვანოთ მომხმარებლის სახელი")
+    @Size(min = 4, max = 20, message = "მომხმარებლის სახელი უნდა იყოს მინიმუმ 4 და მაქსიმუმ 20 სიგრძის")
+    @Pattern(regexp = "^[^@]*$", message = "სახელში არ უნდა იყოს '@' სიმბოლო")
     private String username;
 
-    @NotBlank(message = "password should not be empty")
-    @Size(min = 6, message = "password should be at least 6 symbols")
+    @NotBlank(message = "გთხოვთ, შეიყვანოთ პაროლი")
+    @Size(min = 6, message = "პაროლი უნდა იყოს მინიმუმ 6 სიგრძის")
     private String password;
 
-    @NotBlank(message = "phone number should not be empty")
-    @Pattern(regexp = "^(\\+995)?5\\d{8}$", message = "phone number patter is wrong")
+    @NotBlank(message = "გთხოვთ, შეიყვანოთ ტელეფონის ნომერი")
+    @Pattern(regexp = "^(\\+995)?5\\d{8}$", message = "ტელეფონის ნომერი არ არის ვალიდური. მაგ: 599123456, 995599123456")
     private String phoneNumber;
 
-    @NotBlank(message = "email should not be empty")
-    @Email(message = "email pattern is wrong")
+    @NotBlank(message = "გთხოვთ, შეიყვანოთ თქვენი ელ-ფოსტა")
+    @Email(message = "ელ-ფოსტა არ არის ვალიდური. მაგ: name@gmail.com")
     private String email;
 
     public RegisterRequest() {}

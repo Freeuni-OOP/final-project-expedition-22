@@ -34,10 +34,11 @@ class AuthServiceTest {
         when(userRepository.findByUsername("john"))
                 .thenReturn(Optional.of(new User()));
 
-        RegisterResponse response = authService.register(request);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            authService.register(request);
+        });
 
-        assertFalse(response.isSuccess());
-        assertEquals("Username already exists", response.getMessage());
+        assertEquals("username:ეს მომხმარებლის სახელი უკვე დაკავებულია", exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -143,10 +144,11 @@ class AuthServiceTest {
         when(userRepository.findByPhoneNumber("599123456"))
                 .thenReturn(Optional.of(new User()));
 
-        RegisterResponse response = authService.register(request);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            authService.register(request);
+        });
 
-        assertFalse(response.isSuccess());
-        assertEquals("PhoneNumber already in use", response.getMessage());
+        assertEquals("phoneNumber:ეს ტელეფონის ნომერი უკვე გამოყენებულია", exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -168,10 +170,11 @@ class AuthServiceTest {
         when(userRepository.findByEmail("john@example.com"))
                 .thenReturn(Optional.of(new User()));
 
-        RegisterResponse response = authService.register(request);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            authService.register(request);
+        });
 
-        assertFalse(response.isSuccess());
-        assertEquals("Email already in use", response.getMessage());
+        assertEquals("email:ეს ელ-ფოსტა უკვე რეგისტრირებულია", exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 }

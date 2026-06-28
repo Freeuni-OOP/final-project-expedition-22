@@ -22,15 +22,15 @@ public class AuthService {
 
     public RegisterResponse register(RegisterRequest request){
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            return new RegisterResponse(false, "Username already exists");
+            throw new IllegalArgumentException("username:ეს მომხმარებლის სახელი უკვე დაკავებულია");
         }
 
         if (userRepository.findByPhoneNumber(request.getPhoneNumber()).isPresent()) {
-            return new RegisterResponse(false, "PhoneNumber already in use");
+            throw new IllegalArgumentException("phoneNumber:ეს ტელეფონის ნომერი უკვე გამოყენებულია");
         }
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return new RegisterResponse(false, "Email already in use");
+            throw new IllegalArgumentException("email:ეს ელ-ფოსტა უკვე რეგისტრირებულია");
         }
 
         User user = new User(

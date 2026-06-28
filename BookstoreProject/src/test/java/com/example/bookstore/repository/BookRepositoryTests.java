@@ -292,4 +292,65 @@ class BookRepositoryTest {
     void existsByIdMissingBook() {
         assertThat(bookRepository.existsById(999L)).isFalse();
     }
+
+
+    @Test
+    void findByGenre_returnsBooks_matchingGenreName() {
+        Book book = new Book("Animal Farm", new BigDecimal("6.50"), seller, true);
+        book.setGenres(Set.of(fiction));
+        entityManager.persist(book);
+        entityManager.flush();
+
+        List<Book> found = bookRepository.findByGenres_NameIgnoreCase("Fiction");
+
+        assertThat(found).hasSize(1);
+        assertThat(found.get(0).getTitle()).isEqualTo("Animal Farm");
+    }
+
+    @Test
+    void findByAuthor_returnsBooks_matchingAuthorName() {
+        Book book = new Book("1984", new BigDecimal("9.99"), seller, true);
+        book.setAuthors(Set.of(author1));
+        entityManager.persist(book);
+        entityManager.flush();
+
+        List<Book> found = bookRepository.findByAuthors_NameIgnoreCase("George Orwell");
+
+        assertThat(found).hasSize(1);
+        assertThat(found.get(0).getTitle()).isEqualTo("1984");
+    }
+
+    @Test
+    void findByTitleContainingIgnoreCase_returnsBooks_partiallyMatchingTitle() {
+        createBook("The Great Gatsby", new BigDecimal("10.00"), true);
+        createBook("Gatsby's Return", new BigDecimal("12.00"), true);
+        createBook("Animal Farm", new BigDecimal("8.00"), true);
+        entityManager.flush();
+
+        List<Book> found = bookRepository.findByTitleContainingIgnoreCase("gats");
+
+        assertThat(found).hasSize(2);
+        assertThat(found).extracting(Book::getTitle)
+                .containsExactlyInAnyOrder("The Great Gatsby", "Gatsby's Return");
+    }
+
+    @Test
+    void findFavoriteBooksByUserId_returnsBooks_likedByUser() {
+        User buyer = new User();
+        buyer.setUsername("buyer_jane");
+        buyer.setEmail("jane@example.com");
+        buyer.setPassword("password");
+        buyer.setPhoneNumber("593-000-111");
+
+        Book book = createBook("Pride and Prejudice", new BigDecimal("7.50"), true);
+
+        buyer.setFavouriteBooks(Set.of(book));
+        entityManager.persist(buyer);
+        entityManager.flush();
+
+        List<Book> favorites = bookRepository.findFavoriteBooksByUserId(buyer.getId());
+
+        assertThat(favorites).hasSize(1);
+        assertThat(favorites.get(0).getTitle()).isEqualTo("Pride and Prejudice");
+    }
 }

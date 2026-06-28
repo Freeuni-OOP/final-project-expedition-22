@@ -2,6 +2,8 @@ package com.example.bookstore.controller;
 
 import com.example.bookstore.dto.LoginRequest;
 import com.example.bookstore.dto.LoginResponse;
+import com.example.bookstore.dto.RegisterRequest;
+import com.example.bookstore.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -26,10 +28,12 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
+    private final AuthService authService;
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
-    public AuthController(AuthenticationManager authenticationManager) {
+    public AuthController(AuthenticationManager authenticationManager, AuthService authService) {
         this.authenticationManager = authenticationManager;
+        this.authService = authService;
     }
 
     @PostMapping("/login")
@@ -43,9 +47,11 @@ public class AuthController {
             for (FieldError error : bindingResult.getFieldErrors()) {
                 fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
             }
+          
             Map<String, Object> body = new HashMap<>();
             body.put("success", false);
             body.put("fieldErrors", fieldErrors);
+          
             return ResponseEntity.badRequest().body(body);
         }
 
@@ -75,6 +81,47 @@ public class AuthController {
         if (request.getSession(false) != null) {
             request.getSession(false).invalidate();
         }
+      
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest request, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                if (error.getCode().equals("NotBlank")) {
+                    errors.put(error.getField(), error.getDefaultMessage());
+                }
+            }
+          
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                if (!errors.containsKey(error.getField())) {
+                    errors.put(error.getField(), error.getDefaultMessage());
+                }
+            }
+          
+            return ResponseEntity.badRequest().body(errors);
+        }
+
+        try {
+            authService.register(request);
+
+            Map<String, String> successResponse = new HashMap<>();
+            successResponse.put("message", "რეგისტრაცია წარმატებით დასრულდა!");
+          
+            return ResponseEntity.ok(successResponse);
+
+        } catch (IllegalArgumentException e) {
+            String[] parts = e.getMessage().split(":", 2);
+            String field = parts[0];
+            String message = parts[1];
+
+            Map<String, String> errors = new HashMap<>();
+            errors.put(field, message);
+          
+            return ResponseEntity.badRequest().body(errors);
+        }
     }
 }
