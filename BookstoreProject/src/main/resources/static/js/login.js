@@ -18,7 +18,7 @@ document.getElementById('login-form').addEventListener('submit', async function 
         const data = await response.json();
 
         if (response.ok && data.success) {
-            window.location.href = '/'; // no localStorage needed — cookie persists this
+            window.location.href = '/';
             return;
         }
 
