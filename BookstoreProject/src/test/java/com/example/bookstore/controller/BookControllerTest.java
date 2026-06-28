@@ -111,14 +111,14 @@ class BookControllerTest {
 
         @Test
         void addToFavorites_success() throws Exception {
-            doNothing().when(bookService).addFavorite(1L, 10L);
+            doNothing().when(bookService).addFavorite(10L, 1L);
 
             mockMvc.perform(post("/books/1/favorite")
                             .with(csrf())
                             .param("userId", "10"))
                     .andExpect(status().isOk());
 
-            verify(bookService, times(1)).addFavorite(1L, 10L);
+            verify(bookService, times(1)).addFavorite(10L, 1L);
         }
 
         @Test
@@ -136,14 +136,14 @@ class BookControllerTest {
 
         @Test
         void removeFromFavorites_success() throws Exception {
-            doNothing().when(bookService).removeFavorite(1L, 10L);
+            doNothing().when(bookService).removeFavorite(10L, 1L);
 
             mockMvc.perform(delete("/books/1/favorite")
                             .with(csrf())
                             .param("userId", "10"))
                     .andExpect(status().isNoContent());
 
-            verify(bookService, times(1)).removeFavorite(1L, 10L);
+            verify(bookService, times(1)).removeFavorite(10L, 1L);
         }
 
         @Test

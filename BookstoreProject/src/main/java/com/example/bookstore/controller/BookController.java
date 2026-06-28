@@ -29,14 +29,14 @@ public class BookController {
 
     @PostMapping("/{id}/favorite")
     public ResponseEntity<Void> addToFavorites(@PathVariable("id") Long bookId, @RequestParam Long userId) {
-        bookService.addFavorite(bookId, userId);
+        bookService.addFavorite(userId, bookId);
 
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}/favorite")
     public ResponseEntity<Void> removeFromFavorites(@PathVariable("id") Long bookId, @RequestParam Long userId) {
-        bookService.removeFavorite(bookId, userId);
+        bookService.removeFavorite(userId, bookId);
 
         return ResponseEntity.noContent().build();
     }
