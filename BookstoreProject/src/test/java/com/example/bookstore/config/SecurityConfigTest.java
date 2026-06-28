@@ -38,4 +38,5 @@ class SecurityConfigTest {
     void securedEndpoint_ShouldAllowAuthenticatedUser() throws Exception {
         mockMvc.perform(get("/any-other-protected-endpoint")).andExpect(status().isNotFound());
     }
+
 }
