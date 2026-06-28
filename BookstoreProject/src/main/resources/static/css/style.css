@@ -126,3 +126,17 @@ body {
 .login-container p a:hover {
     text-decoration: underline;
 }
+
+.btn-logout {
+    background: none;
+    border: none;
+    font-size: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+    color: inherit;
+}
+
+.btn-logout:hover {
+    text-decoration: underline;
+}
