@@ -1,10 +1,45 @@
-<nav th:fragment="header" class="navbar" xmlns:th="http://www.thymeleaf.org">
+<nav th:fragment="header"
+     class="navbar"
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
   <a th:href="@{/}" class="logo">📚 Bookstore</a>
 
   <div class="nav-links">
-    <a th:href="@{/}">მთავარი</a>
-    <a th:href="@{/profile}">პროფილი</a>
-    <a th:href="@{/login}">შესვლა</a>
-    <a th:href="@{/register}" class="btn-register">რეგისტრაცია</a>
+
+    <a th:href="@{/}">
+      მთავარი
+    </a>
+
+    <a th:href="@{/profile}"
+       sec:authorize="isAuthenticated()">
+      პროფილი
+    </a>
+
+
+    <a th:href="@{/login}"
+       sec:authorize="isAnonymous()">
+      შესვლა
+    </a>
+
+
+    <a th:href="@{/register}"
+       sec:authorize="isAnonymous()"
+       class="btn-register">
+      რეგისტრაცია
+    </a>
+
+
+    <form th:action="@{/logout}"
+          method="post"
+          sec:authorize="isAuthenticated()">
+
+      <button type="submit">
+        გასვლა
+      </button>
+
+    </form>
+
   </div>
+
 </nav>

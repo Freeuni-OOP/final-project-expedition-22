@@ -39,6 +39,7 @@ dependencies {
     testImplementation 'org.glassfish:jakarta.el:4.0.2'
 
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 }
 
 tasks.named('test') {
