@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -195,5 +196,84 @@ class BookControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(0));
         }
+
+        @Test
+        void ReturnBookById() throws Exception {
+            BookResponse response = new BookResponse(
+                    1L,
+                    "Refactoring",
+                    "Martin Fowler",
+                    "Technology",
+                    1999,
+                    34.99,
+                    "Improving the design of existing code.",
+                    "https://example.com/refactoring.jpg"
+            );
+
+            when(bookService.getBookById(1L))
+                    .thenReturn(response);
+
+            mockMvc.perform(get("/books/1"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.title").value("Refactoring"))
+                    .andExpect(jsonPath("$.price").value(34.99));
+        }
+
+        @Test
+        void UpdateBook() throws Exception {
+            when(bookService.updateBook(eq(1L), any(CreateBookRequest.class)))
+                    .thenReturn(bookResponse);
+
+            mockMvc.perform(put("/books/1").with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                            {
+                              "title": "Dracula",
+                              "author": "Bram Stoker",
+                              "genre": "Horror",
+                              "releaseYear": 2016,
+                              "price": 9.99,
+                              "description": "In good condition.",
+                              "imageUrl": "https://www.goodreads.com/en/book/show/17245.Dracula"
+                            }
+                            """))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.title").value("Dracula"))
+                    .andExpect(jsonPath("$.author").value("Bram Stoker"))
+                    .andExpect(jsonPath("$.genre").value("Horror"))
+                    .andExpect(jsonPath("$.releaseYear").value(2016))
+                    .andExpect(jsonPath("$.price").value(9.99))
+                    .andExpect(jsonPath("$.description").value("In good condition."))
+                    .andExpect(jsonPath("$.imageUrl").value("https://www.goodreads.com/en/book/show/17245.Dracula"));
+
+            verify(bookService).updateBook(eq(1L), any(CreateBookRequest.class));
+        }
+
+        @Test
+        void DeleteBook() throws Exception {
+            doNothing().when(bookService).deleteBook(1L);
+
+            mockMvc.perform(delete("/books/1")
+                            .with(csrf()))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("Book deleted successfully"));
+
+            verify(bookService).deleteBook(1L);
+        }
+
+        @Test
+        void ReturnNotFoundWhenDeletingMissingBook() throws Exception {
+            doThrow(new RuntimeException("Book not found"))
+                    .when(bookService).deleteBook(1L);
+
+            mockMvc.perform(delete("/books/1")
+                            .with(csrf()))
+                    .andExpect(status().isNotFound());
+
+            verify(bookService).deleteBook(1L);
+        }
+
     }
 }
