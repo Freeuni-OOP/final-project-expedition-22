@@ -12,14 +12,7 @@
 <div class="login-container">
     <h2>შესვლა</h2>
 
-    <p th:if="${param.error}" style="color: #dc3545; text-align: center; font-size: 14px;">
-        მომხმარებლის სახელი ან პაროლი არასწორია
-    </p>
-    <p th:if="${param.logout}" style="color: #28a745; text-align: center; font-size: 14px;">
-        თქვენ წარმატებით გამოხვედით სისტემიდან
-    </p>
-
-    <form th:action="@{/login}" method="post">
+    <form id="login-form">
         <div class="form-group">
             <label for="username">მომხმარებლის სახელი</label>
             <input type="text" id="username" name="username"
@@ -27,6 +20,7 @@
                    required
                    oninvalid="this.setCustomValidity('გთხოვთ, შეავსოთ ეს ველი')"
                    oninput="this.setCustomValidity('')">
+            <span class="field-error" id="username-error"></span>
         </div>
 
         <div class="form-group">
@@ -36,6 +30,7 @@
                    required
                    oninvalid="this.setCustomValidity('გთხოვთ, შეავსოთ ეს ველი')"
                    oninput="this.setCustomValidity('')">
+            <span class="field-error" id="password-error"></span>
         </div>
 
         <button type="submit" class="btn-submit">შესვლა</button>
@@ -45,6 +40,8 @@
         <a th:href="@{/register}">არ გაქვთ ანგარიში? რეგისტრაცია</a>
     </p>
 </div>
+
+<script th:src="@{/js/login.js}" src="/js/login.js"></script>
 
 </body>
 </html>
