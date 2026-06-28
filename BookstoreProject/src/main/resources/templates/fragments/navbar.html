@@ -42,4 +42,12 @@
 
   </div>
 
+  <p sec:authorize="isAuthenticated()">
+    AUTHENTICATED
+  </p>
+
+  <p sec:authorize="isAnonymous()">
+    ANONYMOUS
+  </p>
+
 </nav>
