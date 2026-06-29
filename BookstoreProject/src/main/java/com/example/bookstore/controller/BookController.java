@@ -27,6 +27,13 @@ public class BookController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @GetMapping
+    public ResponseEntity<List<BookResponse>> getAllBooks() {
+        List<BookResponse> books = bookService.getAllBooks();
+
+        return ResponseEntity.ok(books);
+    }
+
     @PostMapping("/{id}/favorite")
     public ResponseEntity<Void> addToFavorites(@PathVariable("id") Long bookId, @RequestParam Long userId) {
         bookService.addFavorite(userId, bookId);
