@@ -66,11 +66,7 @@ public class BookController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBook(@PathVariable Long id) {
-        try {
-            bookService.deleteBook(id);
-            return ResponseEntity.ok("Book deleted successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        bookService.deleteBook(id);
+        return ResponseEntity.ok("Book deleted successfully");
     }
 }
