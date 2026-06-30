@@ -164,13 +164,13 @@ class BookControllerTest {
         void getFavorites_success() throws Exception {
             BookResponse second = new BookResponse(
                     2L,
-                    "Refactoring",
-                    "Martin Fowler",
-                    "Technology",
+                    "Hypnos",
+                    "H. P. Lovecraft",
+                    "Horror",
                     1999,
                     34.99,
                     "Improving the design of existing code.",
-                    "https://example.com/refactoring.jpg"
+                    "https://example.com/Hypnos.jpg"
             );
 
             when(bookService.getFavorites(10L)).thenReturn(List.of(bookResponse, second));
@@ -182,7 +182,7 @@ class BookControllerTest {
                     .andExpect(jsonPath("$[0].title").value("Dracula"))
                     .andExpect(jsonPath("$[0].price").value(9.99))
                     .andExpect(jsonPath("$[1].id").value(2L))
-                    .andExpect(jsonPath("$[1].title").value("Refactoring"))
+                    .andExpect(jsonPath("$[1].title").value("Hypnos"))
                     .andExpect(jsonPath("$[1].price").value(34.99));
 
             verify(bookService, times(1)).getFavorites(10L);
@@ -275,5 +275,44 @@ class BookControllerTest {
             verify(bookService).deleteBook(1L);
         }
 
+    }
+    @Nested
+    class GetAllBooks {
+        @Test
+        void shouldReturnAllBooks() throws Exception {
+            BookResponse second = new BookResponse(
+                    2L,
+                    "Hypnos",
+                    "H. P. Lovecraft",
+                    "Horror",
+                    1999,
+                    34.99,
+                    "Improving the design of existing code.",
+                    "https://example.com/Hypnos.jpg"
+            );
+
+            when(bookService.getAllBooks()).thenReturn(List.of(bookResponse, second));
+
+            mockMvc.perform(get("/books"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(2))
+                    .andExpect(jsonPath("$[0].id").value(1))
+                    .andExpect(jsonPath("$[0].title").value("Dracula"))
+                    .andExpect(jsonPath("$[1].id").value(2))
+                    .andExpect(jsonPath("$[1].title").value("Hypnos"));
+
+            verify(bookService, times(1)).getAllBooks();
+        }
+
+        @Test
+        void shouldReturnEmptyListWhenNoBooksExist() throws Exception {
+            when(bookService.getAllBooks()).thenReturn(List.of());
+
+            mockMvc.perform(get("/books"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(0));
+
+            verify(bookService, times(1)).getAllBooks();
+        }
     }
 }
