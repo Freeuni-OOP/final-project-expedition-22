@@ -47,4 +47,26 @@ public class BookController {
 
         return ResponseEntity.ok(favorites);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<BookResponse> getBookById(@PathVariable Long id) {
+        BookResponse response = bookService.getBookById(id);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<BookResponse> updateBook(@PathVariable Long id,
+            @Valid @RequestBody CreateBookRequest request) {
+
+        BookResponse response = bookService.updateBook(id, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteBook(@PathVariable Long id) {
+        bookService.deleteBook(id);
+        return ResponseEntity.ok("Book deleted successfully");
+    }
 }
