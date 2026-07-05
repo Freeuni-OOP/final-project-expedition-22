@@ -1,5 +1,7 @@
 package com.example.bookstore.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.Uploader;
 import com.example.bookstore.dto.BookResponse;
 import com.example.bookstore.dto.CreateBookRequest;
 import com.example.bookstore.entity.Author;
@@ -16,8 +18,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -36,6 +42,10 @@ class BookServiceTest {
     private GenreRepository genreRepository;
     @Mock
     private AuthorRepository authorRepository;
+    @Mock
+    private Cloudinary cloudinary;
+    @Mock
+    private Uploader uploader;
 
     @InjectMocks
     private BookService bookService;
@@ -43,6 +53,7 @@ class BookServiceTest {
     private User sampleUser;
     private Book sampleBook;
     private CreateBookRequest sampleRequest;
+    private MockMultipartFile sampleMultipartFile;
 
     @BeforeEach
     void setUp() {
@@ -55,7 +66,7 @@ class BookServiceTest {
 
         sampleBook.setReleaseYear(1945);
         sampleBook.setDescription("Classic satirical novella");
-        sampleBook.setImageUrl("http://image.com/animal_farm.png");
+        sampleBook.setImageUrl("https://res.cloudinary.com/mock/image/upload/animal_farm.png");
         sampleBook.setGenres(new HashSet<>(Set.of(new Genre("Fiction"))));
         sampleBook.setAuthors(new HashSet<>(Set.of(new Author("George Orwell"))));
 
@@ -67,10 +78,18 @@ class BookServiceTest {
         sampleRequest.setImageUrl("http://image.com/animal_farm.png");
         sampleRequest.setGenre("Fiction");
         sampleRequest.setAuthor("George Orwell");
+
+        sampleMultipartFile = new MockMultipartFile(
+                "image", "test.png", MediaType.IMAGE_PNG_VALUE, "fake-image-bytes".getBytes()
+        );
     }
 
     @Test
-    void CreateBook_Success() {
+    void CreateBook_Success() throws IOException {
+        when(cloudinary.uploader()).thenReturn(uploader);
+        Map<String, String> cloudinaryResponse = Map.of("secure_url", "https://res.cloudinary.com/mock/image/upload/animal_farm.png");
+        when(uploader.upload(any(byte[].class), any(Map.class))).thenReturn(cloudinaryResponse);
+
         when(userRepository.findAll()).thenReturn(List.of(sampleUser));
         when(genreRepository.findByNameIgnoreCase("Fiction")).thenReturn(Optional.empty());
         when(genreRepository.save(any(Genre.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -78,13 +97,41 @@ class BookServiceTest {
         when(authorRepository.save(any(Author.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(bookRepository.save(any(Book.class))).thenReturn(sampleBook);
 
-        BookResponse response = bookService.createBook(sampleRequest);
+        BookResponse response = bookService.createBook(sampleRequest, sampleMultipartFile);
 
         assertNotNull(response);
         assertEquals("Animal Farm", response.getTitle());
         assertEquals(12.50, response.getPrice());
         assertEquals("George Orwell", response.getAuthor());
         assertEquals("Fiction", response.getGenre());
+        assertEquals("https://res.cloudinary.com/mock/image/upload/animal_farm.png", response.getImageUrl());
+    }
+
+    @Test
+    void CreateBook_InvalidFileType_ThrowsException() {
+        MockMultipartFile badFile = new MockMultipartFile(
+                "image", "danger.exe", MediaType.APPLICATION_OCTET_STREAM_VALUE, "malicious".getBytes()
+        );
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            bookService.createBook(sampleRequest, badFile);
+        });
+
+        assertTrue(exception.getMessage().contains("არასწორი ფაილის ფორმატი"));
+    }
+
+    @Test
+    void CreateBook_FileTooLarge_ThrowsException() {
+        byte[] massiveBytes = new byte[(2 * 1024 * 1024) + 10];
+        MockMultipartFile massiveFile = new MockMultipartFile(
+                "image", "huge.jpg", MediaType.IMAGE_JPEG_VALUE, massiveBytes
+        );
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            bookService.createBook(sampleRequest, massiveFile);
+        });
+
+        assertTrue(exception.getMessage().contains("ფაილის ზომა აჭარბებს ლიმიტს"));
     }
 
     @Test
@@ -120,13 +167,17 @@ class BookServiceTest {
     }
 
     @Test
-    void UpdateBook_Success() {
+    void UpdateBook_Success() throws IOException {
+        when(cloudinary.uploader()).thenReturn(uploader);
+        Map<String, String> cloudinaryResponse = Map.of("secure_url", "https://res.cloudinary.com/mock/image/upload/animal_farm.png");
+        when(uploader.upload(any(byte[].class), any(Map.class))).thenReturn(cloudinaryResponse);
+
         when(bookRepository.findById(10L)).thenReturn(Optional.of(sampleBook));
         when(genreRepository.findByNameIgnoreCase("Fiction")).thenReturn(Optional.of(new Genre("Fiction")));
         when(authorRepository.findByNameIgnoreCase("George Orwell")).thenReturn(Optional.of(new Author("George Orwell")));
         when(bookRepository.save(any(Book.class))).thenReturn(sampleBook);
 
-        BookResponse response = bookService.updateBook(10L, sampleRequest);
+        BookResponse response = bookService.updateBook(10L, sampleRequest, sampleMultipartFile);
 
         assertNotNull(response);
         assertEquals("Animal Farm", response.getTitle());

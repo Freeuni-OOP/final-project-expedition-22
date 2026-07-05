@@ -28,8 +28,7 @@ public class CreateBookRequest {
     @Size(max = 1000, message = "აღწერა არ უნდა აღემატებოდეს 1000 სიმბოლოს")
     private String description;
 
-    @NotBlank(message = "გთხოვთ, ჩასვით სურათის ლინკი")
-    @URL(message = "სურათის ლინკი არ არის ვალიდური URL")
+
     private String imageUrl;
 
     public CreateBookRequest() { }

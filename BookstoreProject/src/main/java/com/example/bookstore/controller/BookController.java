@@ -5,8 +5,10 @@ import com.example.bookstore.dto.CreateBookRequest;
 import com.example.bookstore.service.BookService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -20,9 +22,12 @@ public class BookController {
         this.bookService = bookService;
     }
 
-    @PostMapping
-    public ResponseEntity<BookResponse> createBook(@Valid @RequestBody CreateBookRequest request) {
-        BookResponse response = bookService.createBook(request);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<BookResponse> createBook(
+            @Valid @ModelAttribute CreateBookRequest request,
+            @RequestParam(value = "image", required = false) MultipartFile image
+    ) {
+        BookResponse response = bookService.createBook(request, image);
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -62,11 +67,13 @@ public class BookController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<BookResponse> updateBook(@PathVariable Long id,
-            @Valid @RequestBody CreateBookRequest request) {
-
-        BookResponse response = bookService.updateBook(id, request);
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<BookResponse> updateBook(
+            @PathVariable Long id,
+            @Valid @ModelAttribute CreateBookRequest request,
+            @RequestParam(value = "image", required = false) MultipartFile image
+    ) {
+        BookResponse response = bookService.updateBook(id, request, image);
 
         return ResponseEntity.ok(response);
     }
@@ -75,5 +82,13 @@ public class BookController {
     public ResponseEntity<String> deleteBook(@PathVariable Long id) {
         bookService.deleteBook(id);
         return ResponseEntity.ok("Book deleted successfully");
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
+        if (ex.getMessage().contains("ვერ მოიძებნა") || ex.getMessage().contains("not found")) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+        return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
 }
