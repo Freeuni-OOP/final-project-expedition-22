@@ -1,5 +1,7 @@
 package com.example.bookstore.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.bookstore.dto.BookResponse;
 import com.example.bookstore.dto.CreateBookRequest;
 import com.example.bookstore.entity.Author;
@@ -12,7 +14,11 @@ import com.example.bookstore.repository.GenreRepository;
 import com.example.bookstore.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -24,13 +30,43 @@ public class BookService {
     private final UserRepository userRepository;
     private final GenreRepository genreRepository;
     private final AuthorRepository authorRepository;
+    private final Cloudinary cloudinary;
 
     public BookService(BookRepository bookRepository, UserRepository userRepository,
-                       GenreRepository genreRepository, AuthorRepository authorRepository) {
+                       GenreRepository genreRepository, AuthorRepository authorRepository,  Cloudinary cloudinary) {
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
         this.genreRepository = genreRepository;
         this.authorRepository = authorRepository;
+        this.cloudinary = cloudinary;
+    }
+
+    private String saveImage(MultipartFile image) {
+        if (image == null || image.isEmpty()) {
+            throw new IllegalArgumentException("სურათის ფაილი ცარიელია.");
+        }
+
+        String contentType = image.getContentType();
+        if (contentType == null || (!contentType.equals("image/jpeg") &&
+                !contentType.equals("image/jpg") &&
+                !contentType.equals("image/png"))) {
+            throw new IllegalArgumentException("არასწორი ფაილის ფორმატი. ნებადართულია მხოლოდ: JPG, JPEG, PNG.");
+        }
+
+        long maxSizeBytes = 2 * 1024 * 1024;
+        if (image.getSize() > maxSizeBytes) {
+            throw new IllegalArgumentException("ფაილის ზომა აჭარბებს ლიმიტს (მაქსიმუმ 2MB).");
+        }
+
+        try {
+            Map<?, ?> uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.asMap(
+                    "folder", "book_system_images"
+            ));
+            return (String) uploadResult.get("secure_url");
+
+        } catch (IOException e) {
+            throw new RuntimeException("ფაილის ატვირთვა Cloudinary-ზე ვერ მოხერხდა.", e);
+        }
     }
 
     private BookResponse convertToResponse(Book book) {
@@ -55,7 +91,19 @@ public class BookService {
     }
 
     @Transactional
-    public BookResponse createBook(CreateBookRequest request) {
+    public BookResponse createBook(CreateBookRequest request, MultipartFile image) {
+        if (image != null && !image.isEmpty()) {
+            long MAX_FILE_SIZE = 2 * 1024 * 1024;
+            if (image.getSize() > MAX_FILE_SIZE) {
+                throw new IllegalArgumentException("ფაილის ზომა აჭარბებს ლიმიტს (მაქს. 2MB)");
+            }
+
+            String contentType = image.getContentType();
+            java.util.List<String> allowedTypes = java.util.Arrays.asList("image/jpeg", "image/png", "image/jpg", "image/webp");
+            if (contentType == null || !allowedTypes.contains(contentType.toLowerCase())) {
+                throw new IllegalArgumentException("არასწორი ფაილის ფორმატი. ნებადართულია მხოლოდ სურათები (JPEG, PNG, WEBP)");
+            }
+        }
 
         User currentSeller = userRepository.findAll().stream().findFirst()
                 .orElseThrow(() -> new RuntimeException("სისტემაში გამყიდველი მომხმარებელი ვერ მოიძებნა"));
@@ -68,7 +116,13 @@ public class BookService {
         );
         book.setReleaseYear(request.getReleaseYear());
         book.setDescription(request.getDescription());
-        book.setImageUrl(request.getImageUrl());
+
+        if (image != null && !image.isEmpty()) {
+            String uploadedImageUrl = saveImage(image);
+            book.setImageUrl(uploadedImageUrl);
+        } else {
+            book.setImageUrl(request.getImageUrl());
+        }
 
         if (request.getGenre() != null && !request.getGenre().trim().isEmpty()) {
             Genre genre = genreRepository.findByNameIgnoreCase(request.getGenre().trim())
@@ -105,7 +159,7 @@ public class BookService {
     }
 
     @Transactional
-    public BookResponse updateBook(Long id, CreateBookRequest request) {
+    public BookResponse updateBook(Long id, CreateBookRequest request, MultipartFile image) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("წიგნი განახლებისთვის ვერ მოიძებნა ID-ით: " + id));
 
@@ -113,7 +167,13 @@ public class BookService {
         book.setPrice(java.math.BigDecimal.valueOf(request.getPrice()));
         book.setReleaseYear(request.getReleaseYear());
         book.setDescription(request.getDescription());
-        book.setImageUrl(request.getImageUrl());
+
+        if (image != null && !image.isEmpty()) {
+            String uploadedImageUrl = saveImage(image);
+            book.setImageUrl(uploadedImageUrl);
+        } else if (request.getImageUrl() != null) {
+            book.setImageUrl(request.getImageUrl());
+        }
 
         if (request.getGenre() != null && !request.getGenre().trim().isEmpty()) {
             Genre genre = genreRepository.findByNameIgnoreCase(request.getGenre().trim())
@@ -128,7 +188,6 @@ public class BookService {
         }
 
         Book updatedBook = bookRepository.save(book);
-
         return convertToResponse(updatedBook);
     }
 
