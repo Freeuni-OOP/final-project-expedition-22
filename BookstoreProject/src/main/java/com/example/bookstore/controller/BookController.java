@@ -11,7 +11,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.data.domain.Sort;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -132,7 +132,14 @@ public class BookController {
     }
 
     @GetMapping("/sort")
-    public ResponseEntity<List<BookResponse>> sortBooks(@RequestParam String type) {
-        return ResponseEntity.ok(bookService.sortBooks(type));
+    public String sortBooks(
+            @RequestParam(name = "field", defaultValue = "price") String field,
+            @RequestParam(name = "direction", defaultValue = "asc") String direction,
+            org.springframework.ui.Model model) {
+
+
+        List<BookResponse> sortedBooks = bookService.sortBooks(field, direction);
+        model.addAttribute("allBooks", sortedBooks);
+        return "index";
     }
 }

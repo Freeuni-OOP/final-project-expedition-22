@@ -278,21 +278,23 @@ public class BookService {
                 .toList();
     }
 
-    public List<BookResponse> sortBooks(String type) {
+    @Transactional(readOnly = true)
+    public List<BookResponse> sortBooks(String field, String direction) {
         List<Book> books;
+        boolean isDesc = "desc".equalsIgnoreCase(direction);
 
-        switch (type.toLowerCase()) {
+        switch (field.toLowerCase()) {
             case "price":
-                books = bookRepository.findAllByOrderByPriceAsc();
+                books = isDesc ? bookRepository.findAllByOrderByPriceDesc() : bookRepository.findAllByOrderByPriceAsc();
                 break;
             case "date":
-                books = bookRepository.findAllByOrderByCreatedAtDesc();
+                books = isDesc ? bookRepository.findAllByOrderByCreatedAtDesc() : bookRepository.findAllByOrderByCreatedAtAsc();
                 break;
             case "year":
-                books = bookRepository.findAllByOrderByReleaseYearDesc();
+                books = isDesc ? bookRepository.findAllByOrderByReleaseYearDesc() : bookRepository.findAllByOrderByReleaseYearAsc();
                 break;
             default:
-                throw new RuntimeException("Invalid sort type");
+                throw new IllegalArgumentException("Invalid sort type: " + field);
         }
 
         return books.stream()
