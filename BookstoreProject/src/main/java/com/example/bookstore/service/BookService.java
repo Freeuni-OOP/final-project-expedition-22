@@ -260,6 +260,7 @@ public class BookService {
                     return "Unknown";
                 })
                 .orElse("Unknown");
+    }
     public List<BookResponse> searchByTitle(String title) {
         return bookRepository.findByTitleContainingIgnoreCase(title)
                 .stream()
