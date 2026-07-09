@@ -253,32 +253,22 @@
 <div class="app">
 
     <main id="main-content">
-
-
         <div id="bookGrid" class="book-grid" aria-live="polite" th:if="${allBooks != null && !allBooks.isEmpty()}">
 
-
             <article class="book-card" th:each="book : ${allBooks}">
-                <a th:href="@{/books/{id}(id=${book.id})}">
+                <a th:href="@{/books/details/{id}(id=${book.id})}">
                     <img class="book-card__cover"
                          th:src="${book.imageUrl != null && !book.imageUrl.isEmpty()} ? ${book.imageUrl} : '/images/default-book.png'"
                          th:alt="'Cover of ' + ${book.title}">
 
-
                     <h3 class="book-card__title" th:text="${book.title}">Book Title</h3>
                     <p class="book-card__author" th:text="${book.author}">Author Name</p>
                     <p class="book-card__description" th:text="${book.description}">Short description goes here...</p>
-
-
                     <div class="book-card__price">
                         <span th:text="${book.price}">0.00</span> ₾
                     </div>
                 </a>
             </article>
-
-
-
-
         </div>
 
         <div class="empty-state" id="emptyState" th:if="${allBooks == null || allBooks.isEmpty()}" style="display: flex;">
