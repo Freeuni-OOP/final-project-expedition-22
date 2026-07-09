@@ -19,4 +19,20 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     @Query("SELECT b FROM User u JOIN u.favouriteBooks b WHERE u.id = :userId")
     List<Book> findFavoriteBooksByUserId(@Param("userId") Long userId);
+
+    List<Book> findByAuthors_NameContainingIgnoreCase(String author);
+
+    List<Book> findByGenres_NameContainingIgnoreCase(String genre);
+
+    List<Book> findByReleaseYear(Integer releaseYear);
+
+    List<Book> findAllByOrderByPriceAsc();
+    List<Book> findAllByOrderByPriceDesc();
+
+    List<Book> findAllByOrderByCreatedAtDesc();
+    List<Book> findAllByOrderByCreatedAtAsc();
+
+    List<Book> findAllByOrderByReleaseYearDesc();
+    List<Book> findAllByOrderByReleaseYearAsc();
+
 }

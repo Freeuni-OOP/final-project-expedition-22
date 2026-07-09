@@ -255,10 +255,81 @@ public class BookService {
         return bookRepository.findById(bookId)
                 .map(book -> {
                     if (book.getSeller() != null) {
-                        return book.getSeller().getUsername(); // ან .getName() გააჩნია რა ჰქვია ველს User-ში
+                        return book.getSeller().getUsername();
                     }
                     return "Unknown";
                 })
                 .orElse("Unknown");
+    public List<BookResponse> searchByTitle(String title) {
+        return bookRepository.findByTitleContainingIgnoreCase(title)
+                .stream()
+                .map(BookResponse::new)
+                .toList();
+    }
+
+    public List<BookResponse> searchByAuthor(String author) {
+        return bookRepository.findByAuthors_NameContainingIgnoreCase(author)
+                .stream()
+                .map(BookResponse::new)
+                .toList();
+    }
+
+    public List<BookResponse> searchByGenre(String genre) {
+        return bookRepository.findByGenres_NameContainingIgnoreCase(genre)
+                .stream()
+                .map(BookResponse::new)
+                .toList();
+    }
+
+    public List<BookResponse> searchByReleaseYear(Integer year) {
+        return bookRepository.findByReleaseYear(year)
+                .stream()
+                .map(BookResponse::new)
+                .toList();
+    }
+
+    public List<BookResponse> sortByPrice() {
+        return bookRepository.findAllByOrderByPriceAsc()
+                .stream()
+                .map(BookResponse::new)
+                .toList();
+    }
+
+    public List<BookResponse> sortByCreatedAt() {
+        return bookRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(BookResponse::new)
+                .toList();
+    }
+
+    public List<BookResponse> sortByReleaseYear() {
+        return bookRepository.findAllByOrderByReleaseYearDesc()
+                .stream()
+                .map(BookResponse::new)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookResponse> sortBooks(String field, String direction) {
+        List<Book> books;
+        boolean isDesc = "desc".equalsIgnoreCase(direction);
+
+        switch (field.toLowerCase()) {
+            case "price":
+                books = isDesc ? bookRepository.findAllByOrderByPriceDesc() : bookRepository.findAllByOrderByPriceAsc();
+                break;
+            case "date":
+                books = isDesc ? bookRepository.findAllByOrderByCreatedAtDesc() : bookRepository.findAllByOrderByCreatedAtAsc();
+                break;
+            case "year":
+                books = isDesc ? bookRepository.findAllByOrderByReleaseYearDesc() : bookRepository.findAllByOrderByReleaseYearAsc();
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid sort type: " + field);
+        }
+
+        return books.stream()
+                .map(BookResponse::new)
+                .toList();
     }
 }

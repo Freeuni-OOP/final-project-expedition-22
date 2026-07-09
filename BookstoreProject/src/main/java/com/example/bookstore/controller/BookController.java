@@ -11,7 +11,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.data.domain.Sort;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -109,5 +109,37 @@ public class BookController {
             return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
         return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
+    }
+
+    @GetMapping("/search/title")
+    public ResponseEntity<List<BookResponse>> searchByTitle(@RequestParam String title) {
+        return ResponseEntity.ok(bookService.searchByTitle(title));
+    }
+
+    @GetMapping("/search/author")
+    public ResponseEntity<List<BookResponse>> searchByAuthor(@RequestParam String author) {
+        return ResponseEntity.ok(bookService.searchByAuthor(author));
+    }
+
+    @GetMapping("/search/genre")
+    public ResponseEntity<List<BookResponse>> searchByGenre(@RequestParam String genre) {
+        return ResponseEntity.ok(bookService.searchByGenre(genre));
+    }
+
+    @GetMapping("/search/year")
+    public ResponseEntity<List<BookResponse>> searchByYear(@RequestParam Integer year) {
+        return ResponseEntity.ok(bookService.searchByReleaseYear(year));
+    }
+
+    @GetMapping("/sort")
+    public String sortBooks(
+            @RequestParam(name = "field", defaultValue = "price") String field,
+            @RequestParam(name = "direction", defaultValue = "asc") String direction,
+            org.springframework.ui.Model model) {
+
+
+        List<BookResponse> sortedBooks = bookService.sortBooks(field, direction);
+        model.addAttribute("allBooks", sortedBooks);
+        return "index";
     }
 }

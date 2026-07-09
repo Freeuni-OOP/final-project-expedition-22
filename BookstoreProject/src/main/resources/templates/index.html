@@ -225,6 +225,31 @@
     <div data-th-replace="~{fragments/navbar :: header}"></div>
 </header>
 
+<form th:action="@{/sort}" method="get" style="margin: 20px 0; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+
+    <div>
+        <label for="bookField" style="margin-right: 5px;">დახარისხება:</label>
+        <select id="bookField" name="field" class="form-select" style="padding: 8px; border-radius: 5px; min-width: 150px;">
+            <option value="price" th:selected="${param.field != null && param.field[0] == 'price'}">ფასი</option>
+            <option value="date" th:selected="${param.field != null && param.field[0] == 'date'}">დამატების დრო</option>
+            <option value="year" th:selected="${param.field != null && param.field[0] == 'year'}">გამოშვების წელი</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="bookDirection" style="margin-right: 5px;">თანმიმდევრობა:</label>
+        <select id="bookDirection" name="direction" class="form-select" style="padding: 8px; border-radius: 5px; min-width: 150px;">
+            <option value="asc" th:selected="${param.direction != null && param.direction[0] == 'asc'}">ზრდადობით </option>
+            <option value="desc" th:selected="${param.direction != null && param.direction[0] == 'desc'}">კლებადობით </option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn" style="padding: 8px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        გაფილტვრა
+    </button>
+</form>
+
+
 <div class="app">
 
     <main id="main-content">

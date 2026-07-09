@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -25,7 +26,19 @@ public class ViewController {
         return "index";
     }
 
-    @GetMapping("/register")
+    @GetMapping("/sort")
+    public String sortBooks(
+            @RequestParam(name = "field", defaultValue = "price") String field,
+            @RequestParam(name = "direction", defaultValue = "asc") String direction,
+            Model model) {
+        List<BookResponse> sortedBooks = bookService.sortBooks(field, direction);
+        model.addAttribute("allBooks", sortedBooks);
+
+        return "index";
+    }
+
+
+        @GetMapping("/register")
     public String register() {
         return "register";
     }
