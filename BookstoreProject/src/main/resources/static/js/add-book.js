@@ -34,16 +34,51 @@ form.addEventListener("submit", async (event) => {
             body: formData
         });
 
-        if (!response.ok) {
-            throw new Error("Failed to create book");
+        const data = await response.json();
+
+        if (response.ok) {
+            message.style.color = "green";
+            message.textContent = "წიგნი წარმატებით დაემატა!";
+            return;
         }
 
-        message.textContent = "Book created successfully!";
-        message.style.color = "green";
-        form.reset();
-        imagePreview.style.display = "none";
-    } catch (error) {
-        message.textContent = error.message;
+        // Validation errors
+        if (data.fieldErrors) {
+            if (data.fieldErrors.title) {
+                document.getElementById("title-error").textContent = data.fieldErrors.title;
+            }
+
+            if (data.fieldErrors.author) {
+                document.getElementById("author-error").textContent = data.fieldErrors.author;
+            }
+
+            if (data.fieldErrors.genre) {
+                document.getElementById("genre-error").textContent = data.fieldErrors.genre;
+            }
+
+            if (data.fieldErrors.releaseYear) {
+                document.getElementById("year-error").textContent = data.fieldErrors.releaseYear;
+            }
+
+            if (data.fieldErrors.price) {
+                document.getElementById("price-error").textContent = data.fieldErrors.price;
+            }
+
+            if (data.fieldErrors.description) {
+                document.getElementById("description-error").textContent = data.fieldErrors.description;
+            }
+
+            if (data.fieldErrors.image) {
+                document.getElementById("image-error").textContent = data.fieldErrors.image;
+            }
+        }
+        else if (data.message) {
+            message.style.color = "red";
+            message.textContent = data.message;
+        }
+
+    } catch (e) {
         message.style.color = "red";
+        message.textContent = "დაფიქსირდა შეცდომა. გთხოვთ, სცადოთ თავიდან.";
     }
 });
