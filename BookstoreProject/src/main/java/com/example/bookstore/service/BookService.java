@@ -105,8 +105,17 @@ public class BookService {
             }
         }
 
-        User currentSeller = userRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new RuntimeException("სისტემაში გამყიდველი მომხმარებელი ვერ მოიძებნა"));
+        Object principal = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
+        String currentUsername;
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+            currentUsername = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+        } else {
+            currentUsername = principal.toString();
+        }
+        User currentSeller = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("სისტემაში ავტორიზებული მომხმარებელი ვერ მოიძებნა: " + currentUsername));
+
 
         Book book = new Book(
                 request.getTitle(),
@@ -228,4 +237,17 @@ public class BookService {
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public String getOwnerPhoneNumberByBookId(Long bookId) {
+        return bookRepository.findById(bookId)
+                .map(book -> {
+                    if (book.getSeller() != null) {
+                        return book.getSeller().getPhoneNumber();
+                    }
+                    return "Not Provided";
+                })
+                .orElse("Not Provided");
+    }
+
 }

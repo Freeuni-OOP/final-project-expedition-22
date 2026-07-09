@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${book.title} + ' — Stacks'">Book Details</title>
+    <style>
+        :root{
+            --paper:      #F1ECE1;
+            --paper-dim:  #E7E0D1;
+            --ink:        #211C16;
+            --ink-soft:   #6B6255;
+            --rule:       #C9BEA8;
+            --spine-red:  #7B2D26;
+            --spine-green:#2F4538;
+            --gold:       #B8862E;
+            --white:      #FBF9F4;
+
+            --display: 'Fraunces', serif;
+            --body: 'Inter', sans-serif;
+            --mono: 'IBM Plex Mono', monospace;
+            --radius: 3px;
+        }
+
+        *{ box-sizing:border-box; margin:0; padding:0; }
+        body{
+            background:var(--paper);
+            color:var(--ink);
+            font-family:var(--body);
+            line-height:1.6;
+            min-height:100vh;
+            display:flex;
+            flex-direction:column;
+        }
+
+        a{ color:inherit; text-decoration:none; }
+
+        .navbar {
+            background-color: #ffffff;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar .logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .navbar .nav-links {
+            display: flex;
+            align-items: center;
+        }
+        .navbar .nav-links a {
+            color: #555555;
+            text-decoration: none;
+            margin-left: 25px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .navbar .nav-links a:hover {
+            color: #007bff;
+        }
+        .navbar .nav-links .btn-register {
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 8px 18px;
+            border-radius: 4px;
+        }
+        .navbar .nav-links .btn-register:hover {
+            background-color: #0056b3;
+        }
+
+
+        main{
+            flex:1 0 auto;
+            max-width:1100px;
+            width:100%;
+            margin:0 auto;
+            padding:3rem clamp(1rem, 4vw, 2.5rem) 5rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--ink-soft);
+            margin-bottom: 2.5rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--spine-red); }
+
+        .details-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 3rem;
+        }
+        @media (min-width: 768px) {
+            .details-container { grid-template-columns: 400px 1fr; }
+        }
+
+        .details__cover-wrapper {
+            position: relative;
+        }
+        .details__cover {
+            width: 100%;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+            border-radius: var(--radius);
+            border: 1px solid var(--rule);
+            box-shadow: 0 10px 30px rgba(33, 28, 22, 0.08);
+        }
+
+        .details__content {
+            display: flex;
+            flex-direction: column;
+        }
+        .details__title {
+            font-family: var(--display);
+            font-size: clamp(2rem, 4vw, 2.75rem);
+            font-weight: 700;
+            line-height: 1.15;
+            margin-bottom: 0.5rem;
+        }
+        .details__author {
+            font-size: 1.2rem;
+            color: var(--ink-soft);
+            margin-bottom: 1.5rem;
+        }
+        .details__price {
+            font-family: var(--mono);
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--spine-red);
+            border-bottom: 1px solid var(--rule);
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .details__section-title {
+            font-family: var(--display);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .details__description {
+            color: var(--ink);
+            font-size: 1.05rem;
+            white-space: pre-wrap;
+            margin-bottom: 2.5rem;
+        }
+
+        .details__contact-box {
+            background: var(--paper-dim);
+            border: 1px solid var(--rule);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-width: 450px;
+        }
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .contact-info label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--ink-soft);
+        }
+        .contact-info .phone-number {
+            font-family: var(--mono);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.85rem 1.5rem;
+            font-family: var(--body);
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--radius);
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn:active { transform: scale(0.98); }
+
+        .btn--primary {
+            background: var(--spine-green);
+            color: var(--white);
+        }
+        .btn--primary:hover {
+            background: #233329;
+        }
+
+        .site-footer{
+            background:var(--ink);
+            color:#D9D2C4;
+            margin-top:auto;
+            font-size:.8rem;
+            padding:1.5rem clamp(1rem, 4vw, 2.5rem);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<header class="navbar">
+    <div th:replace="~{fragments/navbar :: header}"></div>
+</header>
+
+<div class="app">
+    <main id="main-content">
+
+        <div class="details-container" th:object="${book}">
+
+            <div class="details__cover-wrapper">
+                <img class="details__cover"
+                     th:src="*{imageUrl != null && !imageUrl.isEmpty()} ? *{imageUrl} : '/images/default-book.png'"
+                     th:alt="'Cover of ' + *{title}"/>
+            </div>
+
+            <div class="details__content">
+                <h1 class="details__title" th:text="*{title}">Book Title</h1>
+                <div class="details__author" th:text="*{author}">by Author Name</div>
+                <div class="details__price"><span th:text="*{price}">0.00</span> ₾</div>
+
+                <h2 class="details__section-title">აღწერა</h2>
+                <p class="details__description" th:text="*{description}">Full detailed description of the book will render here from the database.</p>
+
+                <div class="details__contact-box">
+                    <div class="contact-info">
+                        <label>ნომერი:</label>
+                        <div class="phone-number" th:text="${ownerPhone != null && !ownerPhone.isEmpty()} ? ${ownerPhone} : 'Not Provided'"></div>
+                    </div>
+                    <button class="btn btn--primary">
+                        Start Chat
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+</div>
+
+<footer class="site-footer">
+    <span>© 2026 Stacks. All rights reserved.</span>
+</footer>
+
+</body>
+</html>
+
+
