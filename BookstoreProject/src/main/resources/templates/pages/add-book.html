@@ -1,40 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ka" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Add Book</title>
     <link rel="stylesheet" href="/css/add-book.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+
 </head>
 <body>
+<div th:replace="~{fragments/navbar :: header}"></div>
 
 <div class="container">
-    <h1>Add New Book</h1>
+    <h1>დაამატეთ ახალი წიგნი</h1>
 
     <form id="addBookForm">
-        <label for="title">Title</label>
+        <label for="title">სათაური</label>
         <input type="text" id="title" name="title" required>
+        <p id="title-error" class="error-message"></p>
 
-        <label for="author">Author</label>
+        <label for="author">ავტორი</label>
         <input type="text" id="author" name="author" required>
+        <p id="author-error" class="error-message"></p>
 
-        <label for="genre">Genre</label>
+        <label for="genre">ჟანრი</label>
         <input type="text" id="genre" name="genre" required>
+        <p id="genre-error" class="error-message"></p>
 
-        <label for="releaseYear">Release Year</label>
+        <label for="releaseYear">გამოშვების წელი</label>
         <input type="number" id="releaseYear" name="releaseYear" required>
+        <p id="year-error" class="error-message"></p>
 
-        <label for="price">Price</label>
+        <label for="price">ფასი</label>
         <input type="number" id="price" name="price" step="0.01" required>
+        <p id="price-error" class="error-message"></p>
 
-        <label for="description">Description</label>
+        <label for="description">აღწერა</label>
         <textarea id="description" name="description" required></textarea>
+        <p id="description-error" class="error-message"></p>
 
-        <label for="image">Book Image</label>
+        <label for="image">წიგნის სურათი</label>
         <input type="file" id="image" name="image" accept="image/png, image/jpeg, image/jpg" required>
+        <p id="image-error" class="error-message"></p>
 
-        <img id="imagePreview" class="image-preview" alt="Image preview">
+        <img id="imagePreview" class="image-preview" alt="სურათი">
 
-        <button type="submit">Create Book</button>
+        <button type="submit">წიგნის დამატება</button>
     </form>
 
     <p id="message"></p>

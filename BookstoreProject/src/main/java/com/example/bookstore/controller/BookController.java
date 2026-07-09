@@ -7,10 +7,14 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/books")
@@ -23,10 +27,25 @@ public class BookController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<BookResponse> createBook(
+    public ResponseEntity<?> createBook(
             @Valid @ModelAttribute CreateBookRequest request,
+            BindingResult bindingResult,
             @RequestParam(value = "image", required = false) MultipartFile image
     ) {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> fieldErrors = new HashMap<>();
+
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
+            }
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("success", false);
+            body.put("fieldErrors", fieldErrors);
+
+            return ResponseEntity.badRequest().body(body);
+        }
+
         BookResponse response = bookService.createBook(request, image);
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);

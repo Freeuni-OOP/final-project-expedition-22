@@ -20,4 +20,9 @@ public class ViewController {
     public String login() {
         return "login";
     }
+
+    @GetMapping("/books/add")
+    public String addBookPage() {
+        return "pages/add-book";
+    }
 }
