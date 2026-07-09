@@ -37,4 +37,9 @@ public class ViewController {
     public String addBookPage() {
         return "pages/add-book";
     }
+
+    @GetMapping("/profile")
+    public String profilePage() {
+        return "pages/user-profile";
+    }
 }

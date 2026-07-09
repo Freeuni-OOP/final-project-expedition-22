@@ -1,0 +1,38 @@
+.profile-page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.profile-header {
+    margin-bottom: 2rem;
+}
+
+.profile-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.book-section {
+    margin-bottom: 3rem;
+}
+
+.book-section h2 {
+    margin-bottom: 1rem;
+}
+
+.book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 1.5rem;
+}
+
+.book-card__cover {
+    aspect-ratio: 2 / 3;
+    width: 100%;
+    object-fit: cover;
+}
+
+.empty-message {
+    color: #6B6255;
+}
