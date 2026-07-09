@@ -323,5 +323,71 @@ class BookControllerTest {
 
             verify(bookService, times(1)).getAllBooks();
         }
+
+        @Test
+        void shouldSearchBooksByTitle() throws Exception {
+            when(bookService.searchByTitle("Harry"))
+                    .thenReturn(List.of(bookResponse));
+
+            mockMvc.perform(get("/books/search/title")
+                            .param("title", "Harry"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].title").value(bookResponse.getTitle()));
+
+            verify(bookService).searchByTitle("Harry");
+        }
+
+        @Test
+        void shouldSearchBooksByAuthor() throws Exception {
+            when(bookService.searchByAuthor("Rowling"))
+                    .thenReturn(List.of(bookResponse));
+
+            mockMvc.perform(get("/books/search/author")
+                            .param("author", "Rowling"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].author").value(bookResponse.getAuthor()));
+
+            verify(bookService).searchByAuthor("Rowling");
+        }
+
+        @Test
+        void shouldSearchBooksByGenre() throws Exception {
+            when(bookService.searchByGenre("Fantasy"))
+                    .thenReturn(List.of(bookResponse));
+
+            mockMvc.perform(get("/books/search/genre")
+                            .param("genre", "Fantasy"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].genre").value(bookResponse.getGenre()));
+
+            verify(bookService).searchByGenre("Fantasy");
+        }
+
+        @Test
+        void shouldSearchBooksByYear() throws Exception {
+            when(bookService.searchByReleaseYear(2001))
+                    .thenReturn(List.of(bookResponse));
+
+            mockMvc.perform(get("/books/search/year")
+                            .param("year", "2001"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].releaseYear").value(bookResponse.getReleaseYear()));
+
+            verify(bookService).searchByReleaseYear(2001);
+        }
+
+        @Test
+        void shouldSortBooks() throws Exception {
+            when(bookService.sortBooks("price"))
+                    .thenReturn(List.of(bookResponse));
+
+            mockMvc.perform(get("/books/sort")
+                            .param("type", "price"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].title").value(bookResponse.getTitle()));
+
+            verify(bookService).sortBooks("price");
+        }
+
     }
 }

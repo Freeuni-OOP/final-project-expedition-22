@@ -1,5 +1,9 @@
 package com.example.bookstore.dto;
 
+import com.example.bookstore.entity.Author;
+import com.example.bookstore.entity.Book;
+import com.example.bookstore.entity.Genre;
+
 public class BookResponse {
 
     private Long id;
@@ -23,6 +27,25 @@ public class BookResponse {
         this.price = price;
         this.description = description;
         this.imageUrl = imageUrl;
+    }
+
+    public BookResponse(Book book) {
+        this.id = book.getId();
+        this.title = book.getTitle();
+        this.releaseYear = book.getReleaseYear();
+        this.price = book.getPrice().doubleValue();
+        this.description = book.getDescription();
+        this.imageUrl = book.getImageUrl();
+
+        this.author = book.getAuthors().stream()
+                .map(Author::getName)
+                .findFirst()
+                .orElse("");
+
+        this.genre = book.getGenres().stream()
+                .map(Genre::getName)
+                .findFirst()
+                .orElse("");
     }
 
     public Long getId() { return id; }

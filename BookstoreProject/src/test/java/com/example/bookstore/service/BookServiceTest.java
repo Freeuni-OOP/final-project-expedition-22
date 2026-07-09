@@ -231,4 +231,117 @@ class BookServiceTest {
         assertEquals(1, favorites.size());
         assertEquals("Animal Farm", favorites.get(0).getTitle());
     }
+
+    @Test
+    void shouldSearchBooksByTitle() {
+        Book book = new Book("Clean Code", BigDecimal.valueOf(30), new User(), true);
+
+        when(bookRepository.findByTitleContainingIgnoreCase("clean"))
+                .thenReturn(List.of(book));
+
+        List<BookResponse> result = bookService.searchByTitle("clean");
+
+        assertEquals(1, result.size());
+        assertEquals("Clean Code", result.get(0).getTitle());
+        verify(bookRepository).findByTitleContainingIgnoreCase("clean");
+    }
+
+    @Test
+    void shouldSearchBooksByAuthor() {
+        Book book = new Book("Some Book", BigDecimal.valueOf(30), new User(), true);
+        book.setAuthors(Set.of(new Author("some other")));
+
+        when(bookRepository.findByAuthors_NameContainingIgnoreCase("some other"))
+                .thenReturn(List.of(book));
+
+        List<BookResponse> result = bookService.searchByAuthor("some other");
+
+        assertEquals(1, result.size());
+        assertEquals("some other", result.get(0).getAuthor());
+        verify(bookRepository).findByAuthors_NameContainingIgnoreCase("some other");
+    }
+
+    @Test
+    void shouldSearchBooksByGenre() {
+        Book book = new Book("Dune", BigDecimal.valueOf(40), new User(), true);
+        book.setGenres(Set.of(new Genre("Sci-Fi")));
+
+        when(bookRepository.findByGenres_NameContainingIgnoreCase("sci"))
+                .thenReturn(List.of(book));
+
+        List<BookResponse> result = bookService.searchByGenre("sci");
+
+        assertEquals(1, result.size());
+        assertEquals("Sci-Fi", result.get(0).getGenre());
+        verify(bookRepository).findByGenres_NameContainingIgnoreCase("sci");
+    }
+
+    @Test
+    void shouldSearchBooksByReleaseYear() {
+        Book book = new Book("Book 2020", BigDecimal.valueOf(20), new User(), true);
+        book.setReleaseYear(2020);
+
+        when(bookRepository.findByReleaseYear(2020))
+                .thenReturn(List.of(book));
+
+        List<BookResponse> result = bookService.searchByReleaseYear(2020);
+
+        assertEquals(1, result.size());
+        assertEquals(2020, result.get(0).getReleaseYear());
+        verify(bookRepository).findByReleaseYear(2020);
+    }
+
+    @Test
+    void shouldSortBooksByPrice() {
+        Book cheap = new Book("Cheap Book", BigDecimal.valueOf(20), new User(), true);
+        Book expensive = new Book("Expensive Book", BigDecimal.valueOf(60), new User(), true);
+
+        when(bookRepository.findAllByOrderByPriceAsc())
+                .thenReturn(List.of(cheap, expensive));
+
+        List<BookResponse> result = bookService.sortBooks("price");
+
+        assertEquals("Cheap Book", result.get(0).getTitle());
+        assertEquals("Expensive Book", result.get(1).getTitle());
+        verify(bookRepository).findAllByOrderByPriceAsc();
+    }
+
+    @Test
+    void shouldSortBooksByDate() {
+        Book book = new Book("Newest Book", BigDecimal.valueOf(30), new User(), true);
+
+        when(bookRepository.findAllByOrderByCreatedAtDesc())
+                .thenReturn(List.of(book));
+
+        List<BookResponse> result = bookService.sortBooks("date");
+
+        assertEquals(1, result.size());
+        assertEquals("Newest Book", result.get(0).getTitle());
+        verify(bookRepository).findAllByOrderByCreatedAtDesc();
+    }
+
+    @Test
+    void shouldSortBooksByYear() {
+        Book book = new Book("Recent Book", BigDecimal.valueOf(30), new User(), true);
+        book.setReleaseYear(2024);
+
+        when(bookRepository.findAllByOrderByReleaseYearDesc())
+                .thenReturn(List.of(book));
+
+        List<BookResponse> result = bookService.sortBooks("year");
+
+        assertEquals(1, result.size());
+        assertEquals(2024, result.get(0).getReleaseYear());
+        verify(bookRepository).findAllByOrderByReleaseYearDesc();
+    }
+
+    @Test
+    void shouldThrowExceptionForInvalidSortType() {
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> bookService.sortBooks("unknown")
+        );
+
+        assertEquals("Invalid sort type", exception.getMessage());
+    }
 }

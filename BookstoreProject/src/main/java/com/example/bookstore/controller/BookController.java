@@ -110,4 +110,29 @@ public class BookController {
         }
         return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
+
+    @GetMapping("/search/title")
+    public ResponseEntity<List<BookResponse>> searchByTitle(@RequestParam String title) {
+        return ResponseEntity.ok(bookService.searchByTitle(title));
+    }
+
+    @GetMapping("/search/author")
+    public ResponseEntity<List<BookResponse>> searchByAuthor(@RequestParam String author) {
+        return ResponseEntity.ok(bookService.searchByAuthor(author));
+    }
+
+    @GetMapping("/search/genre")
+    public ResponseEntity<List<BookResponse>> searchByGenre(@RequestParam String genre) {
+        return ResponseEntity.ok(bookService.searchByGenre(genre));
+    }
+
+    @GetMapping("/search/year")
+    public ResponseEntity<List<BookResponse>> searchByYear(@RequestParam Integer year) {
+        return ResponseEntity.ok(bookService.searchByReleaseYear(year));
+    }
+
+    @GetMapping("/sort")
+    public ResponseEntity<List<BookResponse>> sortBooks(@RequestParam String type) {
+        return ResponseEntity.ok(bookService.sortBooks(type));
+    }
 }
