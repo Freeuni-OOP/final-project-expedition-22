@@ -245,7 +245,9 @@
 
                 <div class="details__contact-box">
                     <div class="contact-info">
-                        <label>ნომერი:</label>
+                        <p><strong>გამყიდველი:</strong> <span th:text="${ownerName}">სახელი</span></p>
+
+                        <label>ტელეფონის ნომერი:</label>
                         <div class="phone-number" th:text="${ownerPhone != null && !ownerPhone.isEmpty()} ? ${ownerPhone} : 'Not Provided'"></div>
                     </div>
                     <button class="btn btn--primary">

@@ -51,6 +51,9 @@ public class ViewController {
         String ownerPhone = bookService.getOwnerPhoneNumberByBookId(id);
         model.addAttribute("ownerPhone", ownerPhone);
 
+        String ownerName = bookService.getOwnerNameByBookId(id);
+        model.addAttribute("ownerName", ownerName);
+
         return "book-details";
     }
 }

@@ -250,4 +250,15 @@ public class BookService {
                 .orElse("Not Provided");
     }
 
+    @Transactional(readOnly = true)
+    public String getOwnerNameByBookId(Long bookId) {
+        return bookRepository.findById(bookId)
+                .map(book -> {
+                    if (book.getSeller() != null) {
+                        return book.getSeller().getUsername(); // ან .getName() გააჩნია რა ჰქვია ველს User-ში
+                    }
+                    return "Unknown";
+                })
+                .orElse("Unknown");
+    }
 }
