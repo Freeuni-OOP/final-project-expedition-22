@@ -142,4 +142,14 @@ public class BookController {
         model.addAttribute("allBooks", sortedBooks);
         return "index";
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<BookResponse>> searchBooks(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) Integer year) {
+
+        List<BookResponse> books = bookService.searchBooksCombined(title, genre, year);
+        return ResponseEntity.ok(books);
+    }
 }

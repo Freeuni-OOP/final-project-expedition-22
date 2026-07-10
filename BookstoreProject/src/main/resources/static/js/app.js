@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     resetBtn.addEventListener('click', () => {
         searchForm.reset();
-        searchBooks();
+        fetchAllBooks();
     });
 
 
@@ -43,7 +43,20 @@ document.addEventListener('DOMContentLoaded', () => {
             displayBooks(books);
 
         } catch (error) {
-            console.error('Error fetching filtered search results:', error);
+            console.error('Error fetching combined search results:', error);
+            displayBooks([]);
+        }
+    }
+
+    async function fetchAllBooks() {
+        try {
+            showSkeletons();
+            const response = await fetch('/books');
+            if (!response.ok) throw new Error('Failed to load all books');
+            const books = await response.json();
+            displayBooks(books);
+        } catch (error) {
+            console.error('Error loading default list:', error);
             displayBooks([]);
         }
     }
@@ -54,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!books || books.length === 0) {
             bookGrid.style.display = 'none';
             emptyState.style.display = 'flex';
-            emptyState.querySelector('h2').textContent = 'წტს! წიგნები ვერ მოიძებნა';
+            emptyState.querySelector('h2').textContent = 'წიგნები ვერ მოიძებნა';
             emptyState.querySelector('p').textContent = 'სცადეთ სხვა სათაური ან გამოიყენეთ განსხვავებული ფილტრები.';
             return;
         }
@@ -72,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="/books/details/${book.id}">
                     <img class="book-card__cover" src="${imageUrl}" alt="Cover of ${book.title}">
                     <h3 class="book-card__title">${escapeHtml(book.title)}</h3>
-                    <p class="book-card__author">${escapeHtml(book.author || 'Unknown')}</p>
+                    <p class="book-card__author">${escapeHtml(book.author || 'Unknown Author')}</p>
                     <p class="book-card__description">${escapeHtml(book.description || '')}</p>
                     <div class="book-card__price">
                         <span>${parseFloat(book.price || 0).toFixed(2)}</span> ₾
@@ -94,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
         bookGrid.style.display = 'grid';
         emptyState.style.display = 'none';
     }
-
 
     function escapeHtml(str) {
         return str.replace(/&/g, "&amp;")
