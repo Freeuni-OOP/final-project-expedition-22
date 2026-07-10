@@ -12,6 +12,7 @@ import com.example.bookstore.repository.AuthorRepository;
 import com.example.bookstore.repository.BookRepository;
 import com.example.bookstore.repository.GenreRepository;
 import com.example.bookstore.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
@@ -29,6 +31,12 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
 class BookServiceTest {
@@ -81,6 +89,11 @@ class BookServiceTest {
         sampleMultipartFile = new MockMultipartFile(
                 "image", "test.png", MediaType.IMAGE_PNG_VALUE, "fake-image-bytes".getBytes()
         );
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -340,4 +353,608 @@ class BookServiceTest {
             bookService.sortBooks("unknown", "asc");
         });
     }
+
+    @Test
+    void createBookWithoutImageShouldUseRequestImageUrl() {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn("seller_john");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        when(userRepository.findByUsername("seller_john"))
+                .thenReturn(Optional.of(sampleUser));
+
+        Genre genre = new Genre("Fiction");
+        Author author = new Author("George Orwell");
+
+        when(genreRepository.findByNameIgnoreCase("Fiction"))
+                .thenReturn(Optional.of(genre));
+        when(authorRepository.findByNameIgnoreCase("George Orwell"))
+                .thenReturn(Optional.of(author));
+
+        when(bookRepository.save(any(Book.class)))
+                .thenAnswer(invocation -> {
+                    Book book = invocation.getArgument(0);
+                    ReflectionTestUtils.setField(book, "id", 20L);
+                    return book;
+                });
+
+        BookResponse response = bookService.createBook(sampleRequest, null);
+
+        assertEquals(sampleRequest.getImageUrl(), response.getImageUrl());
+
+        verifyNoInteractions(cloudinary);
+        verify(genreRepository, never()).save(any());
+        verify(authorRepository, never()).save(any());
+    }
+
+    @Test
+    void createBookShouldFailWhenAuthenticationIsMissing() {
+        SecurityContextHolder.clearContext();
+
+        AccessDeniedException exception = assertThrows(
+                AccessDeniedException.class,
+                () -> bookService.createBook(sampleRequest, null)
+        );
+
+        assertEquals(
+                "მომხმარებელი არ არის ავტორიზებული.",
+                exception.getMessage()
+        );
+
+        verifyNoInteractions(bookRepository);
+    }
+
+    @Test
+    void createBookShouldFailForAnonymousUser() {
+        Authentication authentication = mock(Authentication.class);
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn("anonymousUser");
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        assertThrows(
+                AccessDeniedException.class,
+                () -> bookService.createBook(sampleRequest, null)
+        );
+    }
+
+    @Test
+    void createBookShouldFailWhenAuthenticatedUserDoesNotExist() {
+        Authentication authentication = mock(Authentication.class);
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn("missing_user");
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        when(userRepository.findByUsername("missing_user"))
+                .thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> bookService.createBook(sampleRequest, null)
+        );
+
+        assertTrue(exception.getMessage().contains("missing_user"));
+    }
+
+    @Test
+    void createBookShouldReadUsernameFromUserDetails() {
+        Authentication authentication = mock(Authentication.class);
+        UserDetails principal = mock(UserDetails.class);
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(principal);
+        when(principal.getUsername()).thenReturn("seller_john");
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        when(userRepository.findByUsername("seller_john"))
+                .thenReturn(Optional.of(sampleUser));
+        when(genreRepository.findByNameIgnoreCase("Fiction"))
+                .thenReturn(Optional.of(new Genre("Fiction")));
+        when(authorRepository.findByNameIgnoreCase("George Orwell"))
+                .thenReturn(Optional.of(new Author("George Orwell")));
+        when(bookRepository.save(any(Book.class)))
+                .thenReturn(sampleBook);
+
+        BookResponse response = bookService.createBook(sampleRequest, null);
+
+        assertEquals("Animal Farm", response.getTitle());
+        verify(userRepository).findByUsername("seller_john");
+    }
+
+    @Test
+    void createBookShouldHandleCloudinaryIOException() throws IOException {
+        Authentication authentication = mock(Authentication.class);
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn("seller_john");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        when(userRepository.findByUsername("seller_john"))
+                .thenReturn(Optional.of(sampleUser));
+
+        MultipartFile image = mock(MultipartFile.class);
+        when(image.isEmpty()).thenReturn(false);
+        when(image.getContentType()).thenReturn("image/png");
+        when(image.getSize()).thenReturn(100L);
+        when(image.getBytes()).thenThrow(new IOException("upload failure"));
+
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> bookService.createBook(sampleRequest, image)
+        );
+
+        assertEquals(
+                "ფაილის ატვირთვა Cloudinary-ზე ვერ მოხერხდა.",
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void getAllBooksShouldHandleNullCollectionsAndNullPrice() {
+        Book book = new Book();
+        book.setTitle("Incomplete Book");
+        book.setPrice(null);
+        book.setAuthors(null);
+        book.setGenres(null);
+
+        when(bookRepository.findAll()).thenReturn(List.of(book));
+
+        List<BookResponse> responses = bookService.getAllBooks();
+
+        assertEquals(1, responses.size());
+        assertEquals("", responses.get(0).getAuthor());
+        assertEquals("", responses.get(0).getGenre());
+        assertEquals(0.0, responses.get(0).getPrice());
+    }
+
+    @Test
+    void updateBookShouldFailWhenBookDoesNotExist() {
+        when(bookRepository.findById(99L)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> bookService.updateBook(
+                        99L,
+                        sampleRequest,
+                        null,
+                        "seller_john"
+                )
+        );
+
+        assertTrue(exception.getMessage().contains("99"));
+    }
+
+    @Test
+    void updateBookShouldFailWhenBookHasNoSeller() {
+        sampleBook.setSeller(null);
+
+        when(bookRepository.findById(10L))
+                .thenReturn(Optional.of(sampleBook));
+
+        assertThrows(
+                AccessDeniedException.class,
+                () -> bookService.updateBook(
+                        10L,
+                        sampleRequest,
+                        null,
+                        "seller_john"
+                )
+        );
+    }
+
+    @Test
+    void updateBookWithoutUploadedImageShouldUseRequestImageUrl() {
+        when(bookRepository.findById(10L))
+                .thenReturn(Optional.of(sampleBook));
+
+        when(genreRepository.findByNameIgnoreCase("Fiction"))
+                .thenReturn(Optional.of(new Genre("Fiction")));
+
+        when(authorRepository.findByNameIgnoreCase("George Orwell"))
+                .thenReturn(Optional.of(new Author("George Orwell")));
+
+        when(bookRepository.save(sampleBook)).thenReturn(sampleBook);
+
+        sampleRequest.setImageUrl("https://example.com/new-cover.jpg");
+
+        BookResponse response = bookService.updateBook(
+                10L,
+                sampleRequest,
+                null,
+                "seller_john"
+        );
+
+        assertEquals(
+                "https://example.com/new-cover.jpg",
+                response.getImageUrl()
+        );
+    }
+
+    @Test
+    void updateBookShouldCreateMissingAuthorAndGenre() {
+        when(bookRepository.findById(10L))
+                .thenReturn(Optional.of(sampleBook));
+
+        when(genreRepository.findByNameIgnoreCase("Fiction"))
+                .thenReturn(Optional.empty());
+        when(genreRepository.save(any(Genre.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(authorRepository.findByNameIgnoreCase("George Orwell"))
+                .thenReturn(Optional.empty());
+        when(authorRepository.save(any(Author.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(bookRepository.save(sampleBook)).thenReturn(sampleBook);
+
+        BookResponse response = bookService.updateBook(
+                10L,
+                sampleRequest,
+                null,
+                "seller_john"
+        );
+
+        assertEquals("Fiction", response.getGenre());
+        assertEquals("George Orwell", response.getAuthor());
+
+        verify(genreRepository).save(any(Genre.class));
+        verify(authorRepository).save(any(Author.class));
+    }
+
+    @Test
+    void deleteBookShouldFailWhenUserIsNotOwner() {
+        when(bookRepository.findById(10L))
+                .thenReturn(Optional.of(sampleBook));
+
+        assertThrows(
+                AccessDeniedException.class,
+                () -> bookService.deleteBook(10L, "wrong_user")
+        );
+
+        verify(userRepository, never())
+                .deleteFavoriteReferencesByBookId(anyLong());
+
+        verify(bookRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void deleteBookShouldRemoveFavoriteReferencesBeforeDeleting() {
+        when(bookRepository.findById(10L))
+                .thenReturn(Optional.of(sampleBook));
+
+        bookService.deleteBook(10L, "seller_john");
+
+        var inOrder = inOrder(userRepository, bookRepository);
+
+        inOrder.verify(userRepository)
+                .deleteFavoriteReferencesByBookId(10L);
+
+        inOrder.verify(bookRepository).deleteById(10L);
+    }
+
+    @Test
+    void searchBooksCombinedShouldFilterByTitleGenreAndYear() {
+        Book matching = new Book(
+                "Animal Farm",
+                BigDecimal.TEN,
+                sampleUser,
+                true
+        );
+        matching.setReleaseYear(1945);
+        matching.setGenres(Set.of(new Genre("Fiction")));
+
+        Book wrongTitle = new Book(
+                "Dune",
+                BigDecimal.TEN,
+                sampleUser,
+                true
+        );
+        wrongTitle.setReleaseYear(1945);
+        wrongTitle.setGenres(Set.of(new Genre("Fiction")));
+
+        when(bookRepository.findAll())
+                .thenReturn(List.of(matching, wrongTitle));
+
+        List<BookResponse> result = bookService.searchBooksCombined(
+                "animal",
+                "fiction",
+                1945
+        );
+
+        assertEquals(1, result.size());
+        assertEquals("Animal Farm", result.get(0).getTitle());
+    }
+
+    @Test
+    void searchBooksCombinedShouldRejectBookWithoutGenres() {
+        Book book = new Book(
+                "Animal Farm",
+                BigDecimal.TEN,
+                sampleUser,
+                true
+        );
+        book.setGenres(Collections.emptySet());
+
+        when(bookRepository.findAll()).thenReturn(List.of(book));
+
+        List<BookResponse> result = bookService.searchBooksCombined(
+                null,
+                "Fiction",
+                null
+        );
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void searchBooksCombinedWithNoFiltersShouldReturnAllBooks() {
+        when(bookRepository.findAll()).thenReturn(List.of(sampleBook));
+
+        List<BookResponse> result =
+                bookService.searchBooksCombined(null, null, null);
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void addFavoriteShouldFailWhenUserDoesNotExist() {
+        when(userRepository.findByUsername("missing"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                RuntimeException.class,
+                () -> bookService.addFavorite("missing", 10L)
+        );
+
+        verify(bookRepository, never()).findById(anyLong());
+    }
+
+    @Test
+    void addFavoriteShouldFailWhenBookDoesNotExist() {
+        when(userRepository.findByUsername("seller_john"))
+                .thenReturn(Optional.of(sampleUser));
+        when(bookRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                RuntimeException.class,
+                () -> bookService.addFavorite("seller_john", 99L)
+        );
+    }
+
+    @Test
+    void removeFavoriteShouldFailWhenUserDoesNotExist() {
+        when(userRepository.findByUsername("missing"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                RuntimeException.class,
+                () -> bookService.removeFavorite("missing", 10L)
+        );
+    }
+
+    @Test
+    void removeFavoriteShouldFailWhenBookDoesNotExist() {
+        when(userRepository.findByUsername("seller_john"))
+                .thenReturn(Optional.of(sampleUser));
+        when(bookRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                RuntimeException.class,
+                () -> bookService.removeFavorite("seller_john", 99L)
+        );
+    }
+
+    @Test
+    void removeFavoriteShouldSaveUser() {
+        sampleUser.getFavouriteBooks().add(sampleBook);
+
+        when(userRepository.findByUsername("seller_john"))
+                .thenReturn(Optional.of(sampleUser));
+        when(bookRepository.findById(10L))
+                .thenReturn(Optional.of(sampleBook));
+
+        bookService.removeFavorite("seller_john", 10L);
+
+        verify(userRepository).save(sampleUser);
+    }
+
+    @Test
+    void getFavoritesShouldFailWhenUserDoesNotExist() {
+        when(userRepository.findByUsername("missing"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                RuntimeException.class,
+                () -> bookService.getFavorites("missing")
+        );
+    }
+
+    @Test
+    void getOwnerPhoneNumberShouldReturnSellerPhone() {
+        when(bookRepository.findById(10L))
+                .thenReturn(Optional.of(sampleBook));
+
+        assertEquals(
+                "555123456",
+                bookService.getOwnerPhoneNumberByBookId(10L)
+        );
+    }
+
+    @Test
+    void getOwnerPhoneNumberShouldReturnDefaultWhenSellerIsMissing() {
+        sampleBook.setSeller(null);
+
+        when(bookRepository.findById(10L))
+                .thenReturn(Optional.of(sampleBook));
+
+        assertEquals(
+                "Not Provided",
+                bookService.getOwnerPhoneNumberByBookId(10L)
+        );
+    }
+
+    @Test
+    void getOwnerPhoneNumberShouldReturnDefaultWhenBookIsMissing() {
+        when(bookRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        assertEquals(
+                "Not Provided",
+                bookService.getOwnerPhoneNumberByBookId(99L)
+        );
+    }
+
+    @Test
+    void getOwnerNameShouldReturnUsername() {
+        when(bookRepository.findById(10L))
+                .thenReturn(Optional.of(sampleBook));
+
+        assertEquals(
+                "seller_john",
+                bookService.getOwnerNameByBookId(10L)
+        );
+    }
+
+    @Test
+    void getOwnerNameShouldReturnUnknownWhenSellerIsMissing() {
+        sampleBook.setSeller(null);
+
+        when(bookRepository.findById(10L))
+                .thenReturn(Optional.of(sampleBook));
+
+        assertEquals(
+                "Unknown",
+                bookService.getOwnerNameByBookId(10L)
+        );
+    }
+
+    @Test
+    void getOwnerNameShouldReturnUnknownWhenBookIsMissing() {
+        when(bookRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        assertEquals(
+                "Unknown",
+                bookService.getOwnerNameByBookId(99L)
+        );
+    }
+
+    @Test
+    void sortByPriceShouldUseAscendingRepositoryMethod() {
+        when(bookRepository.findAllByOrderByPriceAsc())
+                .thenReturn(List.of(sampleBook));
+
+        assertEquals(1, bookService.sortByPrice().size());
+
+        verify(bookRepository).findAllByOrderByPriceAsc();
+    }
+
+    @Test
+    void sortByCreatedAtShouldUseDescendingRepositoryMethod() {
+        when(bookRepository.findAllByOrderByCreatedAtDesc())
+                .thenReturn(List.of(sampleBook));
+
+        assertEquals(1, bookService.sortByCreatedAt().size());
+
+        verify(bookRepository).findAllByOrderByCreatedAtDesc();
+    }
+
+    @Test
+    void sortByReleaseYearShouldUseDescendingRepositoryMethod() {
+        when(bookRepository.findAllByOrderByReleaseYearDesc())
+                .thenReturn(List.of(sampleBook));
+
+        assertEquals(1, bookService.sortByReleaseYear().size());
+
+        verify(bookRepository).findAllByOrderByReleaseYearDesc();
+    }
+
+    @Test
+    void sortBooksShouldSortPriceDescending() {
+        when(bookRepository.findAllByOrderByPriceDesc())
+                .thenReturn(List.of(sampleBook));
+
+        bookService.sortBooks("price", "desc");
+
+        verify(bookRepository).findAllByOrderByPriceDesc();
+    }
+
+    @Test
+    void sortBooksShouldSortDateAscending() {
+        when(bookRepository.findAllByOrderByCreatedAtAsc())
+                .thenReturn(List.of(sampleBook));
+
+        bookService.sortBooks("date", "asc");
+
+        verify(bookRepository).findAllByOrderByCreatedAtAsc();
+    }
+
+    @Test
+    void sortBooksShouldSortYearAscending() {
+        when(bookRepository.findAllByOrderByReleaseYearAsc())
+                .thenReturn(List.of(sampleBook));
+
+        bookService.sortBooks("year", "asc");
+
+        verify(bookRepository).findAllByOrderByReleaseYearAsc();
+    }
+
+    @Test
+    void isBookFavoriteShouldReturnFalseWhenUserDoesNotExist() {
+        when(userRepository.findByUsernameWithFavorites("missing"))
+                .thenReturn(Optional.empty());
+
+        assertFalse(
+                bookService.isBookFavoriteForUser("missing", 10L)
+        );
+
+        verify(bookRepository, never()).findById(anyLong());
+    }
+
+    @Test
+    void isBookFavoriteShouldReturnFalseWhenBookDoesNotExist() {
+        when(userRepository.findByUsernameWithFavorites("seller_john"))
+                .thenReturn(Optional.of(sampleUser));
+        when(bookRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        assertFalse(
+                bookService.isBookFavoriteForUser("seller_john", 99L)
+        );
+    }
+
+    @Test
+    void isBookFavoriteShouldReturnTrueWhenBookIsFavorite() {
+        sampleUser.getFavouriteBooks().add(sampleBook);
+
+        when(userRepository.findByUsernameWithFavorites("seller_john"))
+                .thenReturn(Optional.of(sampleUser));
+        when(bookRepository.findById(10L))
+                .thenReturn(Optional.of(sampleBook));
+
+        assertTrue(
+                bookService.isBookFavoriteForUser("seller_john", 10L)
+        );
+    }
+
+    @Test
+    void isBookFavoriteShouldReturnFalseWhenBookIsNotFavorite() {
+        when(userRepository.findByUsernameWithFavorites("seller_john"))
+                .thenReturn(Optional.of(sampleUser));
+        when(bookRepository.findById(10L))
+                .thenReturn(Optional.of(sampleBook));
+
+        assertFalse(
+                bookService.isBookFavoriteForUser("seller_john", 10L)
+        );
+    }
+
+
 }

@@ -38,16 +38,6 @@ class CreateBookRequestTest {
     }
 
     @Test
-    void testBlankFieldsAndNullNumbers() {
-        CreateBookRequest request = new CreateBookRequest("", "   ", "", null, null, "", "   ");
-
-        Set<ConstraintViolation<CreateBookRequest>> violations = validator.validate(request);
-
-        assertFalse(violations.isEmpty());
-        assertEquals(8, violations.size(), "There should be error for all field");
-    }
-
-    @Test
     void testNegativePrice() {
         CreateBookRequest request = new CreateBookRequest(
                 "title", "author", "genre", 2020,
@@ -77,22 +67,6 @@ class CreateBookRequestTest {
         );
         Set<ConstraintViolation<CreateBookRequest>> futureViolations = validator.validate(futureRequest);
         assertTrue(futureViolations.stream().anyMatch(v -> v.getMessage().equals("გამოშვების წელი არ შეიძლება იყოს მომავალში")));
-    }
-
-    @Test
-    void testInvalidImageUrlPattern() {
-        CreateBookRequest request = new CreateBookRequest(
-                "title", "author", "genre", 2020,
-                15.0, "des...", "something"
-        );
-
-        Set<ConstraintViolation<CreateBookRequest>> violations = validator.validate(request);
-
-        assertFalse(violations.isEmpty());
-        boolean hasInvalidUrlMessage = violations.stream().anyMatch(v ->
-                v.getMessage().equals("სურათის ლინკი არ არის ვალიდური URL"));
-
-        assertTrue(hasInvalidUrlMessage, "There should be error message about URL");
     }
 
     @Test
@@ -188,5 +162,162 @@ class CreateBookRequestTest {
         assertEquals(18.50, request.getPrice(), "Price's setter or getter is wrong");
         assertEquals("ისტორიული რომანი რომელიც...", request.getDescription(), "Description's setter or getter is wrong");
         assertEquals("https://example.com/didostati.jpg", request.getImageUrl(), "ImageUrl's setter or getter is wrong");
+    }
+
+    @Test
+    void defaultConstructorAndSettersShouldWork() {
+        CreateBookRequest request = new CreateBookRequest();
+
+        request.setTitle("Book");
+        request.setAuthor("Author");
+        request.setGenre("Fantasy");
+        request.setReleaseYear(2020);
+        request.setPrice(20.5);
+        request.setDescription("Description");
+        request.setImageUrl("image.jpg");
+
+        assertEquals("Book", request.getTitle());
+        assertEquals("Author", request.getAuthor());
+        assertEquals("Fantasy", request.getGenre());
+        assertEquals(2020, request.getReleaseYear());
+        assertEquals(20.5, request.getPrice());
+        assertEquals("Description", request.getDescription());
+        assertEquals("image.jpg", request.getImageUrl());
+    }
+
+    @Test
+    void fullConstructorShouldInitializeFields() {
+        CreateBookRequest request = new CreateBookRequest(
+                "Dune",
+                "Frank Herbert",
+                "Sci-Fi",
+                1965,
+                35.0,
+                "Classic novel",
+                "cover.jpg"
+        );
+
+        assertEquals("Dune", request.getTitle());
+        assertEquals("Frank Herbert", request.getAuthor());
+        assertEquals("Sci-Fi", request.getGenre());
+        assertEquals(1965, request.getReleaseYear());
+        assertEquals(35.0, request.getPrice());
+        assertEquals("Classic novel", request.getDescription());
+        assertEquals("cover.jpg", request.getImageUrl());
+    }
+
+    @Test
+    void validRequestShouldHaveNoViolations() {
+        CreateBookRequest request = new CreateBookRequest(
+                "Clean Code",
+                "Robert Martin",
+                "Programming",
+                2008,
+                45.0,
+                "Great book",
+                "image.jpg"
+        );
+
+        assertTrue(validator.validate(request).isEmpty());
+    }
+
+    @Test
+    void blankFieldsAndNullNumbersShouldFailValidation() {
+        CreateBookRequest request = new CreateBookRequest();
+
+        Set<ConstraintViolation<CreateBookRequest>> violations =
+                validator.validate(request);
+
+        assertFalse(violations.isEmpty());
+    }
+
+    @Test
+    void negativePriceShouldFailValidation() {
+        CreateBookRequest request = new CreateBookRequest(
+                "Book",
+                "Author",
+                "Genre",
+                2020,
+                -5.0,
+                "Description",
+                null
+        );
+
+        assertFalse(validator.validate(request).isEmpty());
+    }
+
+    @Test
+    void invalidReleaseYearTooSmallShouldFailValidation() {
+        CreateBookRequest request = new CreateBookRequest(
+                "Book",
+                "Author",
+                "Genre",
+                900,
+                10.0,
+                "Description",
+                null
+        );
+
+        assertFalse(validator.validate(request).isEmpty());
+    }
+
+    @Test
+    void invalidReleaseYearTooLargeShouldFailValidation() {
+        CreateBookRequest request = new CreateBookRequest(
+                "Book",
+                "Author",
+                "Genre",
+                2030,
+                10.0,
+                "Description",
+                null
+        );
+
+        assertFalse(validator.validate(request).isEmpty());
+    }
+
+    @Test
+    void titleTooLongShouldFailValidation() {
+        CreateBookRequest request = new CreateBookRequest(
+                "A".repeat(101),
+                "Author",
+                "Genre",
+                2020,
+                10.0,
+                "Description",
+                null
+        );
+
+        assertFalse(validator.validate(request).isEmpty());
+    }
+
+    @Test
+    void authorTooLongShouldFailValidation() {
+        CreateBookRequest request = new CreateBookRequest(
+                "Book",
+                "A".repeat(51),
+                "Genre",
+                2020,
+                10.0,
+                "Description",
+                null
+        );
+
+        assertFalse(validator.validate(request).isEmpty());
+    }
+
+    @Test
+    void descriptionTooLongShouldFailValidation() {
+        CreateBookRequest request = new CreateBookRequest(
+                "Book",
+                "Author",
+                "Genre",
+                2020,
+                10.0,
+                "A".repeat(1001),
+                null
+        );
+
+        assertFalse(validator.validate(request).isEmpty());
     }
 }

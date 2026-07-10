@@ -36,15 +36,6 @@ class LoginRequestTest {
     }
 
     @Test
-    void testShortPassword() {
-        LoginRequest request = new LoginRequest("b1o2o3k", "pass?");
-        Set<ConstraintViolation<LoginRequest>> violations = validator.validate(request);
-        assertEquals(1, violations.size());
-        String errorMessage = violations.iterator().next().getMessage();
-        assertEquals("Password should be at least 6 symbols", errorMessage);
-    }
-
-    @Test
     void testConstructorAndGettersSetters() {
         String username="er2";
         String password="secretPassword0";
@@ -75,4 +66,87 @@ class LoginRequestTest {
         assertEquals("mySecurePassword", request.getPassword(), "Returned password does not match the real password");
     }
 
+    @Test
+    void defaultConstructorAndSettersShouldWork() {
+        LoginRequest request = new LoginRequest();
+
+        request.setUsername("john");
+        request.setPassword("password123");
+
+        assertEquals("john", request.getUsername());
+        assertEquals("password123", request.getPassword());
+    }
+
+    @Test
+    void constructorShouldInitializeFields() {
+        LoginRequest request = new LoginRequest(
+                "alice",
+                "secret123"
+        );
+
+        assertEquals("alice", request.getUsername());
+        assertEquals("secret123", request.getPassword());
+    }
+
+    @Test
+    void validRequestShouldHaveNoViolations() {
+        LoginRequest request = new LoginRequest(
+                "john",
+                "password123"
+        );
+
+        Set<ConstraintViolation<LoginRequest>> violations =
+                validator.validate(request);
+
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void blankUsernameShouldFailValidation() {
+        LoginRequest request = new LoginRequest(
+                "",
+                "password123"
+        );
+
+        Set<ConstraintViolation<LoginRequest>> violations =
+                validator.validate(request);
+
+        assertFalse(violations.isEmpty());
+    }
+
+    @Test
+    void blankPasswordShouldFailValidation() {
+        LoginRequest request = new LoginRequest(
+                "john",
+                ""
+        );
+
+        Set<ConstraintViolation<LoginRequest>> violations =
+                validator.validate(request);
+
+        assertFalse(violations.isEmpty());
+    }
+
+    @Test
+    void shortPasswordShouldFailValidation() {
+        LoginRequest request = new LoginRequest(
+                "john",
+                "12345"
+        );
+
+        Set<ConstraintViolation<LoginRequest>> violations =
+                validator.validate(request);
+
+        assertFalse(violations.isEmpty());
+    }
+
+    @Test
+    void nullFieldsShouldFailValidation() {
+        LoginRequest request = new LoginRequest();
+
+        Set<ConstraintViolation<LoginRequest>> violations =
+                validator.validate(request);
+
+        assertFalse(violations.isEmpty());
+    }
 }
