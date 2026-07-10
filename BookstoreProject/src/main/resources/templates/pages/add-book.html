@@ -2,7 +2,7 @@
 <html lang="ka" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Add Book</title>
+    <title>დაამატეთ ახალი წიგნი</title>
     <link rel="stylesheet" href="/css/add-book.css">
     <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
 
@@ -15,31 +15,45 @@
 
     <form id="addBookForm">
         <label for="title">სათაური</label>
-        <input type="text" id="title" name="title" required>
+        <input type="text" id="title" name="title" required
+               oninvalid="this.setCustomValidity('გთხოვთ, ჩაწეროთ სათაური')"
+               oninput="this.setCustomValidity('')">
         <p id="title-error" class="error-message"></p>
 
         <label for="author">ავტორი</label>
-        <input type="text" id="author" name="author" required>
+        <input type="text" id="author" name="author" required
+               oninvalid="this.setCustomValidity('გთხოვთ, შეიყვანოთ ავტორი')"
+               oninput="this.setCustomValidity('')">
         <p id="author-error" class="error-message"></p>
 
         <label for="genre">ჟანრი</label>
-        <input type="text" id="genre" name="genre" required>
+        <input type="text" id="genre" name="genre" required
+               oninvalid="this.setCustomValidity('გთხოვთ, შეიყვანოთ ჟანრი')"
+               oninput="this.setCustomValidity('')">
         <p id="genre-error" class="error-message"></p>
 
         <label for="releaseYear">გამოშვების წელი</label>
-        <input type="number" id="releaseYear" name="releaseYear" required>
+        <input type="number" id="releaseYear" name="releaseYear" required
+               oninvalid="this.setCustomValidity('გთხოვთ, შეიყვაოთ გამოშვების წელი')"
+               oninput="this.setCustomValidity('')">
         <p id="year-error" class="error-message"></p>
 
         <label for="price">ფასი</label>
-        <input type="number" id="price" name="price" step="0.01" required>
+        <input type="number" id="price" name="price" step="0.01" required
+               oninvalid="this.setCustomValidity('გთხოვთ, შეიყვანოთ ფასი')"
+               oninput="this.setCustomValidity('')">
         <p id="price-error" class="error-message"></p>
 
         <label for="description">აღწერა</label>
-        <textarea id="description" name="description" required></textarea>
+        <textarea id="description" name="description" required
+                  oninvalid="this.setCustomValidity('გთხოვთ, დაწეროთ აღწერა')"
+                  oninput="this.setCustomValidity('')"></textarea>
         <p id="description-error" class="error-message"></p>
 
         <label for="image">წიგნის სურათი</label>
-        <input type="file" id="image" name="image" accept="image/png, image/jpeg, image/jpg" required>
+        <input type="file" id="image" name="image" accept="image/png, image/jpeg, image/jpg" required
+               oninvalid="this.setCustomValidity('გთხოვთ, ჩაამატოთ სურათი')"
+               oninput="this.setCustomValidity('')">
         <p id="image-error" class="error-message"></p>
 
         <img id="imagePreview" class="image-preview" alt="სურათი">

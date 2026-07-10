@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ka" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>პროფილი</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/user-profile.css}">
+</head>
+<body>
+
+<header class="navbar">
+    <div th:replace="~{fragments/navbar :: header}"></div>
+</header>
+
+<main class="profile-page">
+    <section class="profile-info">
+        <div class="profile-avatar">
+            <span id="profileInitial">U</span>
+        </div>
+
+        <div class="profile-details">
+            <h1 id="profileUsername">მომხმარებელი</h1>
+            <p id="profileEmail"></p>
+            <p id="profilePhone"></p>
+        </div>
+    </section>
+
+    <section class="book-section">
+        <h2>ჩემი წიგნები</h2>
+        <div id="myBooksGrid" class="book-grid"></div>
+    </section>
+
+    <section class="book-section">
+        <h2>რჩეული წიგნები</h2>
+        <div id="favoriteBooksGrid" class="book-grid"></div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <div class="site-footer__bottom">
+        <span>© 2026 Bookstore. All rights reserved.</span>
+    </div>
+</footer>
+
+<script src="/js/user-profile.js"></script>
+</body>
+</html>

@@ -17,6 +17,11 @@
     </a>
 
 
+    <a th:href="@{/books/add}"
+       sec:authorize="isAuthenticated()">
+      დაამატე წიგნი
+    </a>
+
     <a th:href="@{/login}"
        sec:authorize="isAnonymous()">
       შესვლა

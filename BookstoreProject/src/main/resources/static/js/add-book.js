@@ -17,6 +17,7 @@ imageInput.addEventListener("change", () => {
 
 form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
 
     const formData = new FormData();
 
@@ -39,10 +40,18 @@ form.addEventListener("submit", async (event) => {
         if (response.ok) {
             message.style.color = "green";
             message.textContent = "წიგნი წარმატებით დაემატა!";
+            form.reset();
+
+            imagePreview.src = "";
+            imagePreview.style.display = "none";
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+
+            setTimeout(() => {
+                message.textContent = "";
+            }, 3000);
             return;
         }
 
-        // Validation errors
         if (data.fieldErrors) {
             if (data.fieldErrors.title) {
                 document.getElementById("title-error").textContent = data.fieldErrors.title;

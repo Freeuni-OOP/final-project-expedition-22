@@ -222,6 +222,7 @@ public class BookService {
             throw new org.springframework.security.access.AccessDeniedException("You do not own this book");
         }
 
+        userRepository.deleteFavoriteReferencesByBookId(id);
         bookRepository.deleteById(id);
     }
 
@@ -274,9 +275,13 @@ public class BookService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("მომხმარებელი ვერ მოიძებნა: " + username));
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("წიგნი ვერ მოიძებნა ID-ით: " + bookId));
+                .orElseThrow(() ->
+                        new RuntimeException("წიგნი ვერ მოიძებნა")
+                );
 
         user.getFavouriteBooks().remove(book);
+
+        userRepository.save(user);
     }
 
     @Transactional(readOnly = true)
