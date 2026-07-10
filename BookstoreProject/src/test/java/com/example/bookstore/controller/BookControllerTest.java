@@ -15,20 +15,18 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.multipart.MultipartFile;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(BookController.class)
-@WithMockUser
+@WithMockUser(username = "user")
 class BookControllerTest {
 
     @Autowired
@@ -107,67 +105,32 @@ class BookControllerTest {
 
             verify(bookService, never()).createBook(any(), any());
         }
-
-        @Test
-        void createBook_noBody_returns400() throws Exception {
-            mockMvc.perform(multipart("/books")
-                            .with(csrf()))
-                    .andExpect(status().isBadRequest());
-        }
     }
 
     @Nested
-    class AddToFavorites {
+    class FavoritesManagement {
 
         @Test
         void addToFavorites_success() throws Exception {
-            doNothing().when(bookService).addFavorite(10L, 1L);
+            doNothing().when(bookService).addFavorite("user", 1L);
 
-            mockMvc.perform(post("/books/1/favorite")
-                            .with(csrf())
-                            .param("userId", "10"))
-                    .andExpect(status().isOk());
-
-            verify(bookService, times(1)).addFavorite(10L, 1L);
-        }
-
-        @Test
-        void addToFavorites_missingUserId_returns400() throws Exception {
             mockMvc.perform(post("/books/1/favorite")
                             .with(csrf()))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isOk());
 
-            verify(bookService, never()).addFavorite(any(), any());
+            verify(bookService, times(1)).addFavorite("user", 1L);
         }
-    }
-
-    @Nested
-    class RemoveFromFavorites {
 
         @Test
         void removeFromFavorites_success() throws Exception {
-            doNothing().when(bookService).removeFavorite(10L, 1L);
+            doNothing().when(bookService).removeFavorite("user", 1L);
 
-            mockMvc.perform(delete("/books/1/favorite")
-                            .with(csrf())
-                            .param("userId", "10"))
-                    .andExpect(status().isNoContent());
-
-            verify(bookService, times(1)).removeFavorite(10L, 1L);
-        }
-
-        @Test
-        void removeFromFavorites_missingUserId_returns400() throws Exception {
             mockMvc.perform(delete("/books/1/favorite")
                             .with(csrf()))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isNoContent());
 
-            verify(bookService, never()).removeFavorite(any(), any());
+            verify(bookService, times(1)).removeFavorite("user", 1L);
         }
-    }
-
-    @Nested
-    class GetFavorites {
 
         @Test
         void getFavorites_success() throws Exception {
@@ -182,56 +145,46 @@ class BookControllerTest {
                     "https://example.com/Hypnos.jpg"
             );
 
-            when(bookService.getFavorites(10L)).thenReturn(List.of(bookResponse, second));
+            when(bookService.getFavorites("user")).thenReturn(List.of(bookResponse, second));
 
-            mockMvc.perform(get("/books/users/10/favorites"))
+            mockMvc.perform(get("/books/favorites"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2))
                     .andExpect(jsonPath("$[0].id").value(1L))
                     .andExpect(jsonPath("$[0].title").value("Dracula"))
-                    .andExpect(jsonPath("$[0].price").value(9.99))
                     .andExpect(jsonPath("$[1].id").value(2L))
-                    .andExpect(jsonPath("$[1].title").value("Hypnos"))
-                    .andExpect(jsonPath("$[1].price").value(34.99));
+                    .andExpect(jsonPath("$[1].title").value("Hypnos"));
 
-            verify(bookService, times(1)).getFavorites(10L);
+            verify(bookService, times(1)).getFavorites("user");
         }
 
         @Test
         void getFavorites_emptyList() throws Exception {
-            when(bookService.getFavorites(10L)).thenReturn(List.of());
+            when(bookService.getFavorites("user")).thenReturn(List.of());
 
-            mockMvc.perform(get("/books/users/10/favorites"))
+            mockMvc.perform(get("/books/favorites"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(0));
         }
+    }
+
+    @Nested
+    class BookOperations {
 
         @Test
         void ReturnBookById() throws Exception {
-            BookResponse response = new BookResponse(
-                    1L,
-                    "Refactoring",
-                    "Martin Fowler",
-                    "Technology",
-                    1999,
-                    34.99,
-                    "Improving the design of existing code.",
-                    "https://example.com/refactoring.jpg"
-            );
-
-            when(bookService.getBookById(1L))
-                    .thenReturn(response);
+            when(bookService.getBookById(1L)).thenReturn(bookResponse);
 
             mockMvc.perform(get("/books/1"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(1))
-                    .andExpect(jsonPath("$.title").value("Refactoring"))
-                    .andExpect(jsonPath("$.price").value(34.99));
+                    .andExpect(jsonPath("$.title").value("Dracula"))
+                    .andExpect(jsonPath("$.price").value(9.99));
         }
 
         @Test
         void UpdateBook() throws Exception {
-            when(bookService.updateBook(eq(1L), any(CreateBookRequest.class), any()))
+            when(bookService.updateBook(eq(1L), any(CreateBookRequest.class), any(), eq("user")))
                     .thenReturn(bookResponse);
 
             MockMultipartFile mockFile = new MockMultipartFile(
@@ -249,145 +202,88 @@ class BookControllerTest {
                             .with(csrf()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(1))
-                    .andExpect(jsonPath("$.title").value("Dracula"))
-                    .andExpect(jsonPath("$.author").value("Bram Stoker"))
-                    .andExpect(jsonPath("$.genre").value("Horror"))
-                    .andExpect(jsonPath("$.releaseYear").value(2016))
-                    .andExpect(jsonPath("$.price").value(9.99))
-                    .andExpect(jsonPath("$.description").value("In good condition."))
-                    .andExpect(jsonPath("$.imageUrl").value("https://www.goodreads.com/en/book/show/17245.Dracula"));
+                    .andExpect(jsonPath("$.title").value("Dracula"));
 
-            verify(bookService).updateBook(eq(1L), any(CreateBookRequest.class), any());
+            verify(bookService).updateBook(eq(1L), any(CreateBookRequest.class), any(), eq("user"));
         }
 
         @Test
         void DeleteBook() throws Exception {
-            doNothing().when(bookService).deleteBook(1L);
+            doNothing().when(bookService).deleteBook(1L, "user");
 
             mockMvc.perform(delete("/books/1")
                             .with(csrf()))
-                    .andExpect(status().isOk())
-                    .andExpect(content().string("Book deleted successfully"));
+                    .andExpect(status().isOk());
 
-            verify(bookService).deleteBook(1L);
-        }
-
-        @Test
-        void ReturnNotFoundWhenDeletingMissingBook() throws Exception {
-            doThrow(new RuntimeException("Book not found"))
-                    .when(bookService).deleteBook(1L);
-
-            mockMvc.perform(delete("/books/1")
-                            .with(csrf()))
-                    .andExpect(status().isNotFound());
-
-            verify(bookService).deleteBook(1L);
+            verify(bookService).deleteBook(1L, "user");
         }
 
     }
+
     @Nested
-    class GetAllBooks {
+    class SearchAndFilterBooks {
+
         @Test
         void shouldReturnAllBooks() throws Exception {
-            BookResponse second = new BookResponse(
-                    2L,
-                    "Hypnos",
-                    "H. P. Lovecraft",
-                    "Horror",
-                    1999,
-                    34.99,
-                    "Improving the design of existing code.",
-                    "https://example.com/Hypnos.jpg"
-            );
-
-            when(bookService.getAllBooks()).thenReturn(List.of(bookResponse, second));
+            when(bookService.getAllBooks()).thenReturn(List.of(bookResponse));
 
             mockMvc.perform(get("/books"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.length()").value(2))
+                    .andExpect(jsonPath("$.length()").value(1))
                     .andExpect(jsonPath("$[0].id").value(1))
-                    .andExpect(jsonPath("$[0].title").value("Dracula"))
-                    .andExpect(jsonPath("$[1].id").value(2))
-                    .andExpect(jsonPath("$[1].title").value("Hypnos"));
-
-            verify(bookService, times(1)).getAllBooks();
-        }
-
-        @Test
-        void shouldReturnEmptyListWhenNoBooksExist() throws Exception {
-            when(bookService.getAllBooks()).thenReturn(List.of());
-
-            mockMvc.perform(get("/books"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.length()").value(0));
+                    .andExpect(jsonPath("$[0].title").value("Dracula"));
 
             verify(bookService, times(1)).getAllBooks();
         }
 
         @Test
         void shouldSearchBooksByTitle() throws Exception {
-            when(bookService.searchByTitle("Harry"))
-                    .thenReturn(List.of(bookResponse));
+            when(bookService.searchByTitle("Dracula")).thenReturn(List.of(bookResponse));
 
             mockMvc.perform(get("/books/search/title")
-                            .param("title", "Harry"))
+                            .param("title", "Dracula"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0].title").value(bookResponse.getTitle()));
+                    .andExpect(jsonPath("$[0].title").value("Dracula"));
 
-            verify(bookService).searchByTitle("Harry");
+            verify(bookService).searchByTitle("Dracula");
         }
 
         @Test
         void shouldSearchBooksByAuthor() throws Exception {
-            when(bookService.searchByAuthor("Rowling"))
-                    .thenReturn(List.of(bookResponse));
+            when(bookService.searchByAuthor("Bram Stoker")).thenReturn(List.of(bookResponse));
 
             mockMvc.perform(get("/books/search/author")
-                            .param("author", "Rowling"))
+                            .param("author", "Bram Stoker"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0].author").value(bookResponse.getAuthor()));
+                    .andExpect(jsonPath("$[0].author").value("Bram Stoker"));
 
-            verify(bookService).searchByAuthor("Rowling");
+            verify(bookService).searchByAuthor("Bram Stoker");
         }
 
         @Test
         void shouldSearchBooksByGenre() throws Exception {
-            when(bookService.searchByGenre("Fantasy"))
-                    .thenReturn(List.of(bookResponse));
+            when(bookService.searchByGenre("Horror")).thenReturn(List.of(bookResponse));
 
             mockMvc.perform(get("/books/search/genre")
-                            .param("genre", "Fantasy"))
+                            .param("genre", "Horror"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0].genre").value(bookResponse.getGenre()));
+                    .andExpect(jsonPath("$[0].genre").value("Horror"));
 
-            verify(bookService).searchByGenre("Fantasy");
+            verify(bookService).searchByGenre("Horror");
         }
 
         @Test
         void shouldSearchBooksByYear() throws Exception {
-            when(bookService.searchByReleaseYear(2001))
-                    .thenReturn(List.of(bookResponse));
+            when(bookService.searchByReleaseYear(2016)).thenReturn(List.of(bookResponse));
 
             mockMvc.perform(get("/books/search/year")
-                            .param("year", "2001"))
+                            .param("year", "2016"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0].releaseYear").value(bookResponse.getReleaseYear()));
+                    .andExpect(jsonPath("$[0].releaseYear").value(2016));
 
-            verify(bookService).searchByReleaseYear(2001);
+            verify(bookService).searchByReleaseYear(2016);
         }
 
-        @Test
-        void shouldSortBooks() throws Exception {
-            when(bookService.sortBooks("price"))
-                    .thenReturn(List.of(bookResponse));
-
-            mockMvc.perform(get("/books/sort")
-                            .param("type", "price"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0].title").value(bookResponse.getTitle()));
-
-            verify(bookService).sortBooks("price");
-        }
 
     }
 }

@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-
 @Service
 public class BookService {
 
@@ -33,7 +32,7 @@ public class BookService {
     private final Cloudinary cloudinary;
 
     public BookService(BookRepository bookRepository, UserRepository userRepository,
-                       GenreRepository genreRepository, AuthorRepository authorRepository,  Cloudinary cloudinary) {
+                       GenreRepository genreRepository, AuthorRepository authorRepository, Cloudinary cloudinary) {
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
         this.genreRepository = genreRepository;
@@ -49,8 +48,9 @@ public class BookService {
         String contentType = image.getContentType();
         if (contentType == null || (!contentType.equals("image/jpeg") &&
                 !contentType.equals("image/jpg") &&
-                !contentType.equals("image/png"))) {
-            throw new IllegalArgumentException("არასწორი ფაილის ფორმატი. ნებადართულია მხოლოდ: JPG, JPEG, PNG.");
+                !contentType.equals("image/png") &&
+                !contentType.equals("image/webp"))) {
+            throw new IllegalArgumentException("არასწორი ფაილის ფორმატი. ნებადართულია მხოლოდ: JPG, JPEG, PNG, WEBP.");
         }
 
         long maxSizeBytes = 2 * 1024 * 1024;
@@ -70,13 +70,19 @@ public class BookService {
     }
 
     private BookResponse convertToResponse(Book book) {
-        String authorsText = book.getAuthors().stream()
-                .map(Author::getName)
-                .collect(Collectors.joining(", "));
+        String authorsText = "";
+        if (book.getAuthors() != null) {
+            authorsText = book.getAuthors().stream()
+                    .map(Author::getName)
+                    .collect(Collectors.joining(", "));
+        }
 
-        String genresText = book.getGenres().stream()
-                .map(Genre::getName)
-                .collect(Collectors.joining(", "));
+        String genresText = "";
+        if (book.getGenres() != null) {
+            genresText = book.getGenres().stream()
+                    .map(Genre::getName)
+                    .collect(Collectors.joining(", "));
+        }
 
         return new BookResponse(
                 book.getId(),
@@ -105,17 +111,23 @@ public class BookService {
             }
         }
 
-        Object principal = org.springframework.security.core.context.SecurityContextHolder
-                .getContext().getAuthentication().getPrincipal();
+        org.springframework.security.core.Authentication authentication =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new org.springframework.security.access.AccessDeniedException("მომხმარებელი არ არის ავტორიზებული.");
+        }
+
+        Object principal = authentication.getPrincipal();
         String currentUsername;
         if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
             currentUsername = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
         } else {
             currentUsername = principal.toString();
         }
+
         User currentSeller = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new RuntimeException("სისტემაში ავტორიზებული მომხმარებელი ვერ მოიძებნა: " + currentUsername));
-
 
         Book book = new Book(
                 request.getTitle(),
@@ -151,13 +163,10 @@ public class BookService {
 
     @Transactional(readOnly = true)
     public List<BookResponse> getAllBooks() {
-        List<Book> books = bookRepository.findAll();
-
-        return books.stream()
+        return bookRepository.findAll().stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
-
 
     @Transactional(readOnly = true)
     public BookResponse getBookById(Long id) {
@@ -168,9 +177,13 @@ public class BookService {
     }
 
     @Transactional
-    public BookResponse updateBook(Long id, CreateBookRequest request, MultipartFile image) {
+    public BookResponse updateBook(Long id, CreateBookRequest request, MultipartFile image, String username) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("წიგნი განახლებისთვის ვერ მოიძებნა ID-ით: " + id));
+
+        if (book.getSeller() == null || !book.getSeller().getUsername().equals(username)) {
+            throw new org.springframework.security.access.AccessDeniedException("You do not own this book");
+        }
 
         book.setTitle(request.getTitle());
         book.setPrice(java.math.BigDecimal.valueOf(request.getPrice()));
@@ -200,9 +213,13 @@ public class BookService {
         return convertToResponse(updatedBook);
     }
 
-    public void deleteBook(Long id) {
-        if (!bookRepository.existsById(id)) {
-            throw new RuntimeException("წიგნი წაშლისთვის ვერ მოიძებნა ID-ით: " + id);
+    @Transactional
+    public void deleteBook(Long id, String username) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("წიგნი წაშლისთვის ვერ მოიძებნა ID-ით: " + id));
+
+        if (book.getSeller() == null || !book.getSeller().getUsername().equals(username)) {
+            throw new org.springframework.security.access.AccessDeniedException("You do not own this book");
         }
 
         bookRepository.deleteById(id);
@@ -238,15 +255,14 @@ public class BookService {
                     }
                     return true;
                 })
-                .map(BookResponse::new)
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
 
-
     @Transactional
-    public void addFavorite(Long userId, Long bookId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("მომხმარებელი ვერ მოიძებნა ID-ით: " + userId));
+    public void addFavorite(String username, Long bookId) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("მომხმარებელი ვერ მოიძებნა: " + username));
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("წიგნი ვერ მოიძებნა ID-ით: " + bookId));
 
@@ -254,18 +270,21 @@ public class BookService {
     }
 
     @Transactional
-    public void removeFavorite(Long userId, Long bookId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("მომხმარებელი ვერ მოიძებნა ID-ით: " + userId));
+    public void removeFavorite(String username, Long bookId) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("მომხმარებელი ვერ მოიძებნა: " + username));
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("წიგნი ვერ მოიძებნა ID-ით: " + bookId));
 
         user.getFavouriteBooks().remove(book);
     }
 
-    @Transactional
-    public List<BookResponse> getFavorites(Long userId) {
-        List<Book> favoriteBooks = bookRepository.findFavoriteBooksByUserId(userId);
+    @Transactional(readOnly = true)
+    public List<BookResponse> getFavorites(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("მომხმარებელი ვერ მოიძებნა: " + username));
+
+        List<Book> favoriteBooks = bookRepository.findFavoriteBooksByUserId(user.getId());
 
         return favoriteBooks.stream()
                 .map(this::convertToResponse)
@@ -295,52 +314,60 @@ public class BookService {
                 })
                 .orElse("Unknown");
     }
+
+    @Transactional(readOnly = true)
     public List<BookResponse> searchByTitle(String title) {
         return bookRepository.findByTitleContainingIgnoreCase(title)
                 .stream()
-                .map(BookResponse::new)
+                .map(this::convertToResponse)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<BookResponse> searchByAuthor(String author) {
         return bookRepository.findByAuthors_NameContainingIgnoreCase(author)
                 .stream()
-                .map(BookResponse::new)
+                .map(this::convertToResponse)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<BookResponse> searchByGenre(String genre) {
         return bookRepository.findByGenres_NameContainingIgnoreCase(genre)
                 .stream()
-                .map(BookResponse::new)
+                .map(this::convertToResponse)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<BookResponse> searchByReleaseYear(Integer year) {
         return bookRepository.findByReleaseYear(year)
                 .stream()
-                .map(BookResponse::new)
+                .map(this::convertToResponse)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<BookResponse> sortByPrice() {
         return bookRepository.findAllByOrderByPriceAsc()
                 .stream()
-                .map(BookResponse::new)
+                .map(this::convertToResponse)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<BookResponse> sortByCreatedAt() {
         return bookRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
-                .map(BookResponse::new)
+                .map(this::convertToResponse)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<BookResponse> sortByReleaseYear() {
         return bookRepository.findAllByOrderByReleaseYearDesc()
                 .stream()
-                .map(BookResponse::new)
+                .map(this::convertToResponse)
                 .toList();
     }
 
@@ -364,7 +391,7 @@ public class BookService {
         }
 
         return books.stream()
-                .map(BookResponse::new)
+                .map(this::convertToResponse)
                 .toList();
     }
 }

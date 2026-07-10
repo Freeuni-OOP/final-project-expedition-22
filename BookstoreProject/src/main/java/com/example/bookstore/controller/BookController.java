@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +29,7 @@ public class BookController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> createBook(
             @Valid @ModelAttribute CreateBookRequest request,
             BindingResult bindingResult,
@@ -34,7 +37,6 @@ public class BookController {
     ) {
         if (bindingResult.hasErrors()) {
             Map<String, String> fieldErrors = new HashMap<>();
-
             for (FieldError error : bindingResult.getFieldErrors()) {
                 fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
             }
@@ -47,7 +49,6 @@ public class BookController {
         }
 
         BookResponse response = bookService.createBook(request, image);
-
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -59,24 +60,31 @@ public class BookController {
     }
 
     @PostMapping("/{id}/favorite")
-    public ResponseEntity<Void> addToFavorites(@PathVariable("id") Long bookId, @RequestParam Long userId) {
-        bookService.addFavorite(userId, bookId);
-
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> addToFavorites(@PathVariable("id") Long bookId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        bookService.addFavorite(authentication.getName(), bookId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}/favorite")
-    public ResponseEntity<Void> removeFromFavorites(@PathVariable("id") Long bookId, @RequestParam Long userId) {
-        bookService.removeFavorite(userId, bookId);
-
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> removeFromFavorites(@PathVariable("id") Long bookId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        bookService.removeFavorite(authentication.getName(), bookId);
         return ResponseEntity.noContent().build();
     }
-
-    @GetMapping("/users/{userId}/favorites")
-    public ResponseEntity<List<BookResponse>> getFavorites(@PathVariable("userId") Long userId) {
-        List<BookResponse> favorites = bookService.getFavorites(userId);
-
-        return ResponseEntity.ok(favorites);
+    @GetMapping("/favorites")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<BookResponse>> getMyFavorites(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(bookService.getFavorites(authentication.getName()));
     }
 
     @GetMapping("/{id}")
@@ -90,16 +98,16 @@ public class BookController {
     public ResponseEntity<BookResponse> updateBook(
             @PathVariable Long id,
             @Valid @ModelAttribute CreateBookRequest request,
-            @RequestParam(value = "image", required = false) MultipartFile image
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            Authentication authentication
     ) {
-        BookResponse response = bookService.updateBook(id, request, image);
-
+        BookResponse response = bookService.updateBook(id, request, image, authentication.getName());
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteBook(@PathVariable Long id) {
-        bookService.deleteBook(id);
+    public ResponseEntity<String> deleteBook(@PathVariable Long id, Authentication authentication) {
+        bookService.deleteBook(id, authentication.getName());
         return ResponseEntity.ok("Book deleted successfully");
     }
 
@@ -151,5 +159,27 @@ public class BookController {
 
         List<BookResponse> books = bookService.searchBooksCombined(title, genre, year);
         return ResponseEntity.ok(books);
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler({RuntimeException.class, org.springframework.security.access.AccessDeniedException.class})
+    public ResponseEntity<Map<String, String>> handleExceptions(Exception ex) {
+        Map<String, String> errorBody = new HashMap<>();
+        String msg = ex.getMessage();
+
+        if (ex instanceof org.springframework.security.access.AccessDeniedException || (msg != null && msg.contains("You do not own"))) {
+            errorBody.put("error", "Access Denied");
+            errorBody.put("message", "You are not authorized to modify this resource.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorBody);
+        }
+
+        if (msg != null && (msg.contains("ვერ მოიძებნა") || msg.toLowerCase().contains("not found"))) {
+            errorBody.put("error", "Not Found");
+            errorBody.put("message", msg);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody);
+        }
+
+        errorBody.put("error", "Internal Server Error");
+        errorBody.put("message", msg != null ? msg : "An unexpected error occurred.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorBody);
     }
 }
