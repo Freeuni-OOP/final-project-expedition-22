@@ -283,7 +283,23 @@ class BookControllerTest {
 
             verify(bookService).searchByReleaseYear(2016);
         }
-
-
     }
+
+    @Nested
+    class Sorting {
+
+        @Test
+        void sortBooks_success() throws Exception {
+            when(bookService.sortBooks("price", "asc")).thenReturn(List.of(bookResponse));
+
+            mockMvc.perform(get("/books/sort") // URL არის /books + /sort
+                            .param("field", "price")
+                            .param("direction", "asc"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("index")); // @RestController "index"-ს აბრუნებს როგორც ტექსტს
+
+            verify(bookService, times(1)).sortBooks("price", "asc");
+        }
+    }
+
 }
