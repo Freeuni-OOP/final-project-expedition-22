@@ -25,7 +25,8 @@ async function loadBooks(
                 createBookCard(
                     book,
                     showDeleteButton,
-                    showFavoriteButton
+                    showFavoriteButton,
+                    gridId
                 )
             )
             .join("");
@@ -36,7 +37,7 @@ async function loadBooks(
     }
 }
 
-function createBookCard(book, showDeleteButton, showFavoriteButton) {
+function createBookCard(book, showDeleteButton, showFavoriteButton, gridId) {
     const imageUrl = book.imageUrl || "/images/default-book.png";
 
     const deleteButton = showDeleteButton
@@ -63,7 +64,7 @@ function createBookCard(book, showDeleteButton, showFavoriteButton) {
         : "";
 
     return `
-        <article class="book-card" id="book-${book.id}">
+        <article class="book-card" id="${gridId}-book-${book.id}">
             ${favoriteButton}
 
             <a href="/books/details/${book.id}">
@@ -136,7 +137,7 @@ async function deleteBook(event, bookId) {
             throw new Error("Delete failed");
         }
 
-        document.getElementById(`book-${bookId}`)?.remove();
+        document.getElementById(`myBooksGrid-book-${bookId}`)?.remove();
 
     } catch (error) {
         alert("წიგნის წაშლა ვერ მოხერხდა.");
@@ -152,7 +153,7 @@ async function removeFavorite(event, bookId) {
     });
 
     if (response.ok) {
-        document.getElementById(`book-${bookId}`)?.remove();
+        document.getElementById(`favoriteBooksGrid-book-${bookId}`)?.remove();
     } else {
         alert("რჩეულებიდან წაშლა ვერ მოხერხდა.");
     }
