@@ -18,7 +18,9 @@ document.getElementById('login-form').addEventListener('submit', async function 
             })
         });
 
-        if (response.ok) {
+        if (response.url.includes('error')) {
+            document.getElementById('username-error').textContent = 'არასწორი მომხმარებლის სახელი ან პაროლი';
+        } else if (response.ok) {
             window.location.href = '/';
             return;
         } else {
