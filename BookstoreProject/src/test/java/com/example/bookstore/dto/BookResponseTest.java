@@ -1,6 +1,15 @@
 package com.example.bookstore.dto;
 
+import com.example.bookstore.entity.Author;
+import com.example.bookstore.entity.Book;
+import com.example.bookstore.entity.Genre;
+import com.example.bookstore.entity.User;
 import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class BookResponseTest {
@@ -70,4 +79,105 @@ class BookResponseTest {
         assertEquals("story is great.", response.getDescription());
         assertEquals("https://example.com/jeans.jpg", response.getImageUrl());
     }
+    @Test
+    void defaultConstructorAndSettersShouldWork() {
+        BookResponse response = new BookResponse();
+
+        response.setId(1L);
+        response.setTitle("Clean Code");
+        response.setAuthor("Robert Martin");
+        response.setGenre("Programming");
+        response.setReleaseYear(2008);
+        response.setPrice(35.5);
+        response.setDescription("Best practices");
+        response.setImageUrl("image.jpg");
+        response.setFavorite(true);
+
+        assertEquals(1L, response.getId());
+        assertEquals("Clean Code", response.getTitle());
+        assertEquals("Robert Martin", response.getAuthor());
+        assertEquals("Programming", response.getGenre());
+        assertEquals(2008, response.getReleaseYear());
+        assertEquals(35.5, response.getPrice());
+        assertEquals("Best practices", response.getDescription());
+        assertEquals("image.jpg", response.getImageUrl());
+        assertTrue(response.isFavorite());
+    }
+
+    @Test
+    void fullConstructorShouldInitializeFields() {
+        BookResponse response = new BookResponse(
+                2L,
+                "Dune",
+                "Frank Herbert",
+                "Sci-Fi",
+                1965,
+                29.99,
+                "Classic novel",
+                "cover.png"
+        );
+
+        assertEquals(2L, response.getId());
+        assertEquals("Dune", response.getTitle());
+        assertEquals("Frank Herbert", response.getAuthor());
+        assertEquals("Sci-Fi", response.getGenre());
+        assertEquals(1965, response.getReleaseYear());
+        assertEquals(29.99, response.getPrice());
+        assertEquals("Classic novel", response.getDescription());
+        assertEquals("cover.png", response.getImageUrl());
+        assertFalse(response.isFavorite());
+    }
+
+    @Test
+    void constructorFromBookShouldPopulateFields() {
+        User seller = new User();
+
+        Book book = new Book(
+                "Effective Java",
+                BigDecimal.valueOf(55.50),
+                seller,
+                true
+        );
+
+        book.setReleaseYear(2018);
+        book.setDescription("Java best practices");
+        book.setImageUrl("effective-java.jpg");
+
+        Author author = new Author("Joshua Bloch");
+        Genre genre = new Genre("Programming");
+
+        book.setAuthors(Set.of(author));
+        book.setGenres(Set.of(genre));
+
+        BookResponse response = new BookResponse(book);
+
+        assertEquals("Effective Java", response.getTitle());
+        assertEquals(55.50, response.getPrice());
+        assertEquals(2018, response.getReleaseYear());
+        assertEquals("Java best practices", response.getDescription());
+        assertEquals("effective-java.jpg", response.getImageUrl());
+        assertEquals("Joshua Bloch", response.getAuthor());
+        assertEquals("Programming", response.getGenre());
+    }
+
+    @Test
+    void constructorFromBookShouldHandleEmptyAuthorAndGenre() {
+        User seller = new User();
+
+        Book book = new Book(
+                "Unknown",
+                BigDecimal.TEN,
+                seller,
+                true
+        );
+
+        book.setAuthors(new HashSet<>());
+        book.setGenres(new HashSet<>());
+
+        BookResponse response = new BookResponse(book);
+
+        assertEquals("", response.getAuthor());
+        assertEquals("", response.getGenre());
+    }
+
 }
