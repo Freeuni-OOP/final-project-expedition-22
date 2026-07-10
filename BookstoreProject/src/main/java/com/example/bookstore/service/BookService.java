@@ -333,4 +333,19 @@ public class BookService {
                 .map(BookResponse::new)
                 .toList();
     }
+
+    @Transactional(readOnly = true)
+    public boolean isBookFavoriteForUser(String username, Long bookId) {
+        User user = userRepository.findByUsernameWithFavorites(username).orElse(null);
+        if (user == null) {
+            return false;
+        }
+
+        Book book = bookRepository.findById(bookId).orElse(null);
+        if (book == null) {
+            return false;
+        }
+        return user.getFavouriteBooks().contains(book);
+    }
+
 }

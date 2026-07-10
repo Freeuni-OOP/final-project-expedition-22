@@ -14,6 +14,7 @@ public class BookResponse {
     private Integer releaseYear;
     private String description;
     private String imageUrl;
+    private boolean isFavorite;
 
     public BookResponse() {}
 
@@ -71,4 +72,7 @@ public class BookResponse {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public boolean isFavorite() { return isFavorite; }
+    public void setFavorite(boolean favorite) { isFavorite = favorite;}
 }

@@ -109,6 +109,35 @@
         .details__cover-wrapper {
             position: relative;
         }
+
+        .favorite-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            color: #94a3b8;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            outline: none;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.1);
+            background: #ffffff;
+        }
+        .favorite-btn.active {
+            color: #ef4444;
+        }
+
         .details__cover {
             width: 100%;
             aspect-ratio: 2/3;
@@ -233,6 +262,12 @@
                 <img class="details__cover"
                      th:src="*{imageUrl != null && !imageUrl.isEmpty()} ? *{imageUrl} : '/images/default-book.png'"
                      th:alt="'Cover of ' + *{title}"/>
+                <button class="favorite-btn"
+                        th:classappend="${book.isFavorite} ? 'active' : ''"
+                        th:data-id="${book.id}"
+                        onclick="toggleFavorite(this)">
+                    <span class="heart-icon" th:text="${book.isFavorite ? '♥' : '♡'}">♡</span>
+                </button>
             </div>
 
             <div class="details__content">
@@ -266,6 +301,79 @@
 </footer>
 
 </body>
+
+<script>
+    document.onreadystatechange = function () {
+        if (document.readyState === "interactive" || document.readyState === "complete") {
+            checkFavoriteStatus();
+        }
+    };
+
+    async function checkFavoriteStatus() {
+        const heartButton = document.querySelector(".favorite-btn");
+        if (!heartButton) return;
+
+        const bookId = heartButton.getAttribute("data-id");
+        const heartIcon = heartButton.querySelector(".heart-icon");
+
+        try {
+            const response = await fetch(`/books/${bookId}`);
+            if (response.ok) {
+                const bookData = await response.json();
+
+                const isFav = bookData.favorite || bookData.isFavorite;
+
+                if (isFav) {
+                    heartButton.classList.add("active");
+                    heartIcon.textContent = "♥";
+                } else {
+                    heartButton.classList.remove("active");
+                    heartIcon.textContent = "♡";
+                }
+            }
+        } catch (error) {
+            console.error("შეცდომა სტატუსის შემოწმებისას:", error);
+        }
+    }
+
+    async function toggleFavorite(button) {
+        if (window.event) {
+            window.event.preventDefault();
+            window.event.stopPropagation();
+        }
+
+        const bookId = button.getAttribute("data-id");
+        const heartIcon = button.querySelector(".heart-icon");
+
+        try {
+            const response = await fetch(`/api/favorites/toggle/${bookId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (response.redirected || response.status === 401 ||
+                response.status === 403 || response.url.includes('/login')) {
+                alert("გთხოვთ, გაიაროთ ავტორიზაცია ფავორიტებში დასამატებლად!");
+                window.location.href = "/login";
+                return;
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.isFavorite) {
+                    button.classList.add("active");
+                    heartIcon.textContent = "♥";
+                } else {
+                    button.classList.remove("active");
+                    heartIcon.textContent = "♡";
+                }
+            }
+        } catch (error) {
+            console.error("შეცდომა:", error);
+        }
+    }
+</script>
+
 </html>
 
 
