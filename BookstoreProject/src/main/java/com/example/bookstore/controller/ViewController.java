@@ -53,6 +53,11 @@ public class ViewController {
         return "pages/add-book";
     }
 
+    @GetMapping("/profile")
+    public String profilePage() {
+        return "pages/user-profile";
+    }
+  
     @GetMapping("/books/details/{id}")
     public String showBookDetails(@PathVariable("id") Long id, Model model) {
         BookResponse book = bookService.getBookById(id);

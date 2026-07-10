@@ -1,0 +1,128 @@
+.profile-page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.profile-header {
+    margin-bottom: 2rem;
+}
+
+.profile-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.book-section {
+    margin-bottom: 3rem;
+}
+
+.book-section h2 {
+    margin-bottom: 1rem;
+}
+
+.book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 1.5rem;
+}
+
+.book-card__cover {
+    aspect-ratio: 2 / 3;
+    width: 100%;
+    object-fit: cover;
+}
+
+.empty-message {
+    color: #6B6255;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2.5rem;
+    background: white;
+    border: 1px solid #c9bea8;
+    border-radius: 4px;
+}
+
+.profile-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: #7b2d26;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.profile-details h1 {
+    margin-bottom: 0.5rem;
+}
+
+.profile-details p {
+    color: #6b6255;
+    margin: 0.2rem 0;
+}
+
+.delete-book-button {
+    width: 100%;
+    margin-top: 0.75rem;
+    padding: 0.6rem;
+    border: none;
+    border-radius: 3px;
+    background: #7b2d26;
+    color: white;
+    cursor: pointer;
+}
+
+.delete-book-button:hover {
+    background: #5f211c;
+}
+
+.book-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.delete-book-button {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+}
+
+.book-card {
+    position: relative;
+}
+
+.favorite-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+
+    font-size: 18px;
+    line-height: 1;
+}
+
+.favorite-button:hover {
+    transform: scale(1.1);
+}

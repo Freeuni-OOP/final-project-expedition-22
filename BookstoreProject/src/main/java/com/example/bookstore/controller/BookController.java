@@ -11,6 +11,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.core.Authentication;
+
 import org.springframework.data.domain.Sort;
 import java.util.HashMap;
 import java.util.List;
@@ -73,8 +75,11 @@ public class BookController {
     }
 
     @DeleteMapping("/{id}/favorite")
-    public ResponseEntity<Void> removeFromFavorites(@PathVariable("id") Long bookId, @RequestParam Long userId) {
-        bookService.removeFavorite(userId, bookId);
+    public ResponseEntity<Void> removeFromFavorites(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        bookService.removeFavorite(id, authentication.getName());
 
         return ResponseEntity.noContent().build();
     }
@@ -165,5 +170,15 @@ public class BookController {
 
         model.addAttribute("allBooks", sortedBooks);
         return "index";
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<BookResponse>> searchBooks(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) Integer year) {
+
+        List<BookResponse> books = bookService.searchBooksCombined(title, genre, year);
+        return ResponseEntity.ok(books);
     }
 }
