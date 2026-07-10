@@ -10,26 +10,19 @@ document.getElementById('login-form').addEventListener('submit', async function 
     try {
         const response = await fetch('/login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             credentials: 'same-origin',
-            body: JSON.stringify({ username, password })
+            body: new URLSearchParams({
+                'username': username,
+                'password': password
+            })
         });
 
-        const data = await response.json();
-
-        if (response.ok && data.success) {
+        if (response.ok) {
             window.location.href = '/';
             return;
-        }
-
-        if (data.fieldErrors) {
-            if (data.fieldErrors.username) {
-                document.getElementById('username-error').textContent = data.fieldErrors.username;
-            } else if (data.fieldErrors.password) {
-                document.getElementById('password-error').textContent = data.fieldErrors.password;
-            }
-        } else if (data.message) {
-            document.getElementById('username-error').textContent = data.message;
+        } else {
+            document.getElementById('username-error').textContent = 'არასწორი მომხმარებლის სახელი ან პაროლი';
         }
 
     } catch (err) {
