@@ -191,11 +191,13 @@ public class BookService {
         return convertToResponse(updatedBook);
     }
 
+    @Transactional
     public void deleteBook(Long id) {
         if (!bookRepository.existsById(id)) {
-            throw new RuntimeException("წიგნი წაშლისთვის ვერ მოიძებნა ID-ით: " + id);
+            throw new RuntimeException("წიგნი ვერ მოიძებნა ID-ით: " + id);
         }
 
+        userRepository.deleteFavoriteReferencesByBookId(id);
         bookRepository.deleteById(id);
     }
 
@@ -211,13 +213,20 @@ public class BookService {
     }
 
     @Transactional
-    public void removeFavorite(Long userId, Long bookId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("მომხმარებელი ვერ მოიძებნა ID-ით: " + userId));
+    public void removeFavorite(Long bookId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new RuntimeException("მომხმარებელი ვერ მოიძებნა")
+                );
+
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("წიგნი ვერ მოიძებნა ID-ით: " + bookId));
+                .orElseThrow(() ->
+                        new RuntimeException("წიგნი ვერ მოიძებნა")
+                );
 
         user.getFavouriteBooks().remove(book);
+
+        userRepository.save(user);
     }
 
     @Transactional
