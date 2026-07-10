@@ -8,6 +8,54 @@
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/css/style.css">
+  
+  <style>
+  .favorite-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            color: #94a3b8;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            outline: none;
+            z-index: 10;
+
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .book-card:hover .favorite-btn {
+            opacity: 1;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.1);
+            background: #ffffff;
+        }
+
+        .favorite-btn:not(.active):hover {
+            color: #64748b;
+        }
+
+        .favorite-btn.active {
+            color: #ef4444 !important;
+        }
+
+        .favorite-btn.active:hover {
+            color: #dc2626 !important;
+        }
+  </style>
+  
+  
 </head>
 <body>
 <a class="skip-link" href="#main-content">Skip to content</a>
@@ -76,6 +124,14 @@
         <div id="bookGrid" class="book-grid" aria-live="polite" th:style="${allBooks == null || allBooks.isEmpty()} ? 'display: none;' : 'display: grid;'">
             <th:block th:if="${allBooks != null}">
                 <article class="book-card" th:each="book : ${allBooks}">
+                  
+                  <button class="favorite-btn"
+                        th:classappend="${book.isFavorite} ? 'active' : ''"
+                        th:data-id="${book.id}"
+                        onclick="toggleFavorite(this)">
+                    <span class="heart-icon" th:text="${book.isFavorite ? '♥' : '♡'}">♡</span>
+                </button>
+                  
                     <a th:href="@{/books/details/{id}(id=${book.id})}">
                         <img class="book-card__cover"
                              th:src="${book.imageUrl != null && !book.imageUrl.isEmpty()} ? ${book.imageUrl} : '/images/default-book.png'"
@@ -96,7 +152,6 @@
             <h2>No books here yet</h2>
             <p>Add a book to this shelf and it will show up here.</p>
         </div>
-
     </main>
 
 </div>
@@ -121,4 +176,72 @@
 <script src="/js/app.js"></script>
 
 </body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const favoriteButtons = document.querySelectorAll(".favorite-btn");
+        if (favoriteButtons.length === 0) return;
+
+
+        for (const button of favoriteButtons) {
+            const bookId = button.getAttribute("data-id");
+            const heartIcon = button.querySelector(".heart-icon");
+
+            try {
+                const response = await fetch(`/books/${bookId}`);
+                if (response.ok) {
+                    const bookData = await response.json();
+
+                    const isFav = bookData.favorite || bookData.isFavorite;
+
+                    if (isFav) {
+                        button.classList.add("active");
+                        heartIcon.textContent = "♥";
+                        console.log(`წიგნი ID: ${bookId} დაფავორიტებულია. გული გაწითლდა!`);
+                    }
+                }
+            } catch (error) {
+                console.error(`შეცდომა ID: ${bookId} წიგნის შემოწმებისას:`, error);
+            }
+        }
+    });
+
+    async function toggleFavorite(button) {
+        if (window.event) {
+            window.event.preventDefault();
+            window.event.stopPropagation();
+        }
+
+        const bookId = button.getAttribute("data-id");
+        const heartIcon = button.querySelector(".heart-icon");
+
+        try {
+            const response = await fetch(`/api/favorites/toggle/${bookId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (response.redirected || response.status === 401 ||
+                response.status === 403 || response.url.includes('/login')) {
+                alert("გთხოვთ, გაიაროთ ავტორიზაცია ფავორიტებში დასამატებლად!");
+                window.location.href = "/login";
+                return;
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.isFavorite) {
+                    button.classList.add("active");
+                    heartIcon.textContent = "♥";
+                } else {
+                    button.classList.remove("active");
+                    heartIcon.textContent = "♡";
+                }
+            }
+        } catch (error) {
+            console.error("შეცდომა:", error);
+        }
+    }
+</script>
+
 </html>

@@ -16,7 +16,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByPhoneNumber(String phoneNumber);
     Optional<User> findByEmail(String email);
 
-    @Modifying
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.favouriteBooks WHERE u.username = :username")
+    Optional<User> findByUsernameWithFavorites(@Param("username") String username);
+    
+  @Modifying
     @Query(value = "DELETE FROM user_favorites WHERE book_id = :bookId", nativeQuery = true)
     void deleteFavoriteReferencesByBookId(@Param("bookId") Long bookId);
 }

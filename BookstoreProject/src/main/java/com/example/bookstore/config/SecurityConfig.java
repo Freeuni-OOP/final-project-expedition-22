@@ -28,7 +28,7 @@ public class SecurityConfig {
                                 "/js/**", "/images/**", "/favicon.ico", "/sort").permitAll()
                         .requestMatchers(HttpMethod.GET, "/books", "/books/details/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/books").authenticated()
-                        .requestMatchers("/api/chat/**").authenticated()
+                        .requestMatchers("/api/chat/**", "/api/favorites/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

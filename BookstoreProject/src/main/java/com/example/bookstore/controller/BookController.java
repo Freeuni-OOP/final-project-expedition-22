@@ -55,9 +55,16 @@ public class BookController {
     }
 
     @GetMapping
-    public ResponseEntity<List<BookResponse>> getAllBooks() {
+    public ResponseEntity<List<BookResponse>> getAllBooks(java.security.Principal principal) {
         List<BookResponse> books = bookService.getAllBooks();
 
+        if (principal != null) {
+            String username = principal.getName();
+            for (BookResponse book : books) {
+                boolean favoriteStatus = bookService.isBookFavoriteForUser(username, book.getId());
+                book.setFavorite(favoriteStatus);
+            }
+        }
         return ResponseEntity.ok(books);
     }
 
@@ -90,8 +97,16 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookResponse> getBookById(@PathVariable Long id) {
+    public ResponseEntity<BookResponse> getBookById(@PathVariable Long id, java.security.Principal principal) {
         BookResponse response = bookService.getBookById(id);
+
+        if (principal != null) {
+            String username = principal.getName();
+            boolean favoriteStatus = bookService.isBookFavoriteForUser(username, id);
+            response.setFavorite(favoriteStatus);
+        } else {
+            response.setFavorite(false);
+        }
 
         return ResponseEntity.ok(response);
     }
@@ -145,10 +160,19 @@ public class BookController {
     public String sortBooks(
             @RequestParam(name = "field", defaultValue = "price") String field,
             @RequestParam(name = "direction", defaultValue = "asc") String direction,
-            org.springframework.ui.Model model) {
-
+            org.springframework.ui.Model model,
+            java.security.Principal principal) {
 
         List<BookResponse> sortedBooks = bookService.sortBooks(field, direction);
+
+        if (principal != null) {
+            String username = principal.getName();
+            for (BookResponse book : sortedBooks) {
+                boolean favoriteStatus = bookService.isBookFavoriteForUser(username, book.getId());
+                book.setFavorite(favoriteStatus);
+            }
+        }
+
         model.addAttribute("allBooks", sortedBooks);
         return "index";
     }
