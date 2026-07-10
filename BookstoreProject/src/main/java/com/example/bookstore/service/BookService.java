@@ -222,19 +222,23 @@ public class BookService {
                 })
                 .filter(book -> {
                     if (genre != null && !genre.trim().isEmpty()) {
-                        return book.getGenres() != null && book.getGenres().stream()
+                        if (book.getGenres() == null || book.getGenres().isEmpty()) {
+                            return false;
+                        }
+                        String searchGenre = genre.trim().toLowerCase();
+                        return book.getGenres().stream()
                                 .anyMatch(g -> g.getName() != null &&
-                                        g.getName().equalsIgnoreCase(genre.trim()));
+                                        g.getName().toLowerCase().contains(searchGenre));
                     }
                     return true;
                 })
                 .filter(book -> {
                     if (year != null) {
-                        return year.equals(book.getReleaseYear());
+                        return book.getReleaseYear() != null && book.getReleaseYear().equals(year);
                     }
                     return true;
                 })
-                .map(this::convertToResponse)
+                .map(BookResponse::new)
                 .collect(Collectors.toList());
     }
 
