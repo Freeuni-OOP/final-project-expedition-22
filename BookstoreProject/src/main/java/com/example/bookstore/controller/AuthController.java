@@ -47,11 +47,11 @@ public class AuthController {
             for (FieldError error : bindingResult.getFieldErrors()) {
                 fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
             }
-          
+
             Map<String, Object> body = new HashMap<>();
             body.put("success", false);
             body.put("fieldErrors", fieldErrors);
-          
+
             return ResponseEntity.badRequest().body(body);
         }
 
@@ -81,7 +81,7 @@ public class AuthController {
         if (request.getSession(false) != null) {
             request.getSession(false).invalidate();
         }
-      
+
         return ResponseEntity.ok().build();
     }
 
@@ -95,13 +95,13 @@ public class AuthController {
                     errors.put(error.getField(), error.getDefaultMessage());
                 }
             }
-          
+
             for (FieldError error : bindingResult.getFieldErrors()) {
                 if (!errors.containsKey(error.getField())) {
                     errors.put(error.getField(), error.getDefaultMessage());
                 }
             }
-          
+
             return ResponseEntity.badRequest().body(errors);
         }
 
@@ -110,7 +110,7 @@ public class AuthController {
 
             Map<String, String> successResponse = new HashMap<>();
             successResponse.put("message", "რეგისტრაცია წარმატებით დასრულდა!");
-          
+
             return ResponseEntity.ok(successResponse);
 
         } catch (IllegalArgumentException e) {
@@ -120,7 +120,7 @@ public class AuthController {
 
             Map<String, String> errors = new HashMap<>();
             errors.put(field, message);
-          
+
             return ResponseEntity.badRequest().body(errors);
         }
     }
