@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
 
+import org.springframework.data.domain.Sort;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -136,7 +137,24 @@ public class BookController {
     }
 
     @GetMapping("/sort")
-    public ResponseEntity<List<BookResponse>> sortBooks(@RequestParam String type) {
-        return ResponseEntity.ok(bookService.sortBooks(type));
+    public String sortBooks(
+            @RequestParam(name = "field", defaultValue = "price") String field,
+            @RequestParam(name = "direction", defaultValue = "asc") String direction,
+            org.springframework.ui.Model model) {
+
+
+        List<BookResponse> sortedBooks = bookService.sortBooks(field, direction);
+        model.addAttribute("allBooks", sortedBooks);
+        return "index";
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<BookResponse>> searchBooks(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) Integer year) {
+
+        List<BookResponse> books = bookService.searchBooksCombined(title, genre, year);
+        return ResponseEntity.ok(books);
     }
 }

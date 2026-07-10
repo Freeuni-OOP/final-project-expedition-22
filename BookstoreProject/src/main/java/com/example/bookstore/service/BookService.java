@@ -105,8 +105,17 @@ public class BookService {
             }
         }
 
-        User currentSeller = userRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new RuntimeException("სისტემაში გამყიდველი მომხმარებელი ვერ მოიძებნა"));
+        Object principal = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
+        String currentUsername;
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+            currentUsername = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+        } else {
+            currentUsername = principal.toString();
+        }
+        User currentSeller = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("სისტემაში ავტორიზებული მომხმარებელი ვერ მოიძებნა: " + currentUsername));
+
 
         Book book = new Book(
                 request.getTitle(),
@@ -201,6 +210,40 @@ public class BookService {
         bookRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
+    public List<BookResponse> searchBooksCombined(String title, String genre, Integer year) {
+        List<Book> books = bookRepository.findAll();
+
+        return books.stream()
+                .filter(book -> {
+                    if (title != null && !title.trim().isEmpty()) {
+                        return book.getTitle() != null &&
+                                book.getTitle().toLowerCase().contains(title.trim().toLowerCase());
+                    }
+                    return true;
+                })
+                .filter(book -> {
+                    if (genre != null && !genre.trim().isEmpty()) {
+                        if (book.getGenres() == null || book.getGenres().isEmpty()) {
+                            return false;
+                        }
+                        String searchGenre = genre.trim().toLowerCase();
+                        return book.getGenres().stream()
+                                .anyMatch(g -> g.getName() != null &&
+                                        g.getName().toLowerCase().contains(searchGenre));
+                    }
+                    return true;
+                })
+                .filter(book -> {
+                    if (year != null) {
+                        return book.getReleaseYear() != null && book.getReleaseYear().equals(year);
+                    }
+                    return true;
+                })
+                .map(BookResponse::new)
+                .collect(Collectors.toList());
+    }
+
 
     @Transactional
     public void addFavorite(Long userId, Long bookId) {
@@ -238,6 +281,29 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public String getOwnerPhoneNumberByBookId(Long bookId) {
+        return bookRepository.findById(bookId)
+                .map(book -> {
+                    if (book.getSeller() != null) {
+                        return book.getSeller().getPhoneNumber();
+                    }
+                    return "Not Provided";
+                })
+                .orElse("Not Provided");
+    }
+
+    @Transactional(readOnly = true)
+    public String getOwnerNameByBookId(Long bookId) {
+        return bookRepository.findById(bookId)
+                .map(book -> {
+                    if (book.getSeller() != null) {
+                        return book.getSeller().getUsername();
+                    }
+                    return "Unknown";
+                })
+                .orElse("Unknown");
+    }
     public List<BookResponse> searchByTitle(String title) {
         return bookRepository.findByTitleContainingIgnoreCase(title)
                 .stream()
@@ -287,21 +353,23 @@ public class BookService {
                 .toList();
     }
 
-    public List<BookResponse> sortBooks(String type) {
+    @Transactional(readOnly = true)
+    public List<BookResponse> sortBooks(String field, String direction) {
         List<Book> books;
+        boolean isDesc = "desc".equalsIgnoreCase(direction);
 
-        switch (type.toLowerCase()) {
+        switch (field.toLowerCase()) {
             case "price":
-                books = bookRepository.findAllByOrderByPriceAsc();
+                books = isDesc ? bookRepository.findAllByOrderByPriceDesc() : bookRepository.findAllByOrderByPriceAsc();
                 break;
             case "date":
-                books = bookRepository.findAllByOrderByCreatedAtDesc();
+                books = isDesc ? bookRepository.findAllByOrderByCreatedAtDesc() : bookRepository.findAllByOrderByCreatedAtAsc();
                 break;
             case "year":
-                books = bookRepository.findAllByOrderByReleaseYearDesc();
+                books = isDesc ? bookRepository.findAllByOrderByReleaseYearDesc() : bookRepository.findAllByOrderByReleaseYearAsc();
                 break;
             default:
-                throw new RuntimeException("Invalid sort type");
+                throw new IllegalArgumentException("Invalid sort type: " + field);
         }
 
         return books.stream()

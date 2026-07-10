@@ -30,8 +30,10 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     List<Book> findByReleaseYear(Integer releaseYear);
 
     List<Book> findAllByOrderByPriceAsc();
+    List<Book> findAllByOrderByPriceDesc();
 
     List<Book> findAllByOrderByCreatedAtDesc();
+    List<Book> findAllByOrderByCreatedAtAsc();
 
     List<Book> findAllByOrderByReleaseYearDesc();
 
@@ -53,4 +55,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     WHERE u.id = :userId
 """)
     List<Book> findFavoriteBooksByUserIdWithAuthorsAndGenres(@Param("userId") Long userId);
+    List<Book> findAllByOrderByReleaseYearAsc();
+
 }

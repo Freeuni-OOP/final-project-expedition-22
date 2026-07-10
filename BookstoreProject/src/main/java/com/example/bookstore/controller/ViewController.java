@@ -5,6 +5,9 @@ import com.example.bookstore.service.BookService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import java.util.List;
 
 @Controller
@@ -23,7 +26,19 @@ public class ViewController {
         return "index";
     }
 
-    @GetMapping("/register")
+    @GetMapping("/sort")
+    public String sortBooks(
+            @RequestParam(name = "field", defaultValue = "price") String field,
+            @RequestParam(name = "direction", defaultValue = "asc") String direction,
+            Model model) {
+        List<BookResponse> sortedBooks = bookService.sortBooks(field, direction);
+        model.addAttribute("allBooks", sortedBooks);
+
+        return "index";
+    }
+
+
+        @GetMapping("/register")
     public String register() {
         return "register";
     }
@@ -41,5 +56,22 @@ public class ViewController {
     @GetMapping("/profile")
     public String profilePage() {
         return "pages/user-profile";
+    }
+  
+    @GetMapping("/books/details/{id}")
+    public String showBookDetails(@PathVariable("id") Long id, Model model) {
+        BookResponse book = bookService.getBookById(id);
+        if (book == null) {
+            return "redirect:/";
+        }
+        model.addAttribute("book", book);
+
+        String ownerPhone = bookService.getOwnerPhoneNumberByBookId(id);
+        model.addAttribute("ownerPhone", ownerPhone);
+
+        String ownerName = bookService.getOwnerNameByBookId(id);
+        model.addAttribute("ownerName", ownerName);
+
+        return "book-details";
     }
 }
