@@ -3,6 +3,7 @@ package com.example.bookstore.config;
 import com.example.bookstore.service.CustomerUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
@@ -23,10 +24,12 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/register", "/login", "/logout", "/books", "/css/**", "/js/**",
-                        "/images/**", "/favicon.ico", "/books/details/**", "/sort", "/chat").permitAll()
-                                .requestMatchers("/api/chat/**", "/chat/**").authenticated()
-                .anyRequest().authenticated()
+                        .requestMatchers("/", "/register", "/login", "/logout", "/css/**",
+                                "/js/**", "/images/**", "/favicon.ico", "/sort").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/books", "/books/details/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/books").authenticated()
+                        .requestMatchers("/api/chat/**").authenticated()
+                        .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
