@@ -29,11 +29,7 @@ class SecurityConfigTest {
         mockMvc.perform(post("/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andExpect(status().isBadRequest());    }
-
-    @Test
-    void securedEndpoint_ShouldDenyAnonymousUser() throws Exception {
-        mockMvc.perform(get("/any-other-protected-endpoint")).andExpect(status().isForbidden());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -42,4 +38,35 @@ class SecurityConfigTest {
         mockMvc.perform(get("/any-other-protected-endpoint")).andExpect(status().isNotFound());
     }
 
+    @Test
+    void booksGet_ShouldBePermittedForAnonymousUsers() throws Exception {
+        mockMvc.perform(get("/books"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void booksPost_ShouldRequireAuthentication() throws Exception {
+        mockMvc.perform(post("/books")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    void favoritesEndpoint_ShouldRequireAuthentication() throws Exception {
+        mockMvc.perform(get("/api/favorites"))
+                .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    void chatEndpoint_ShouldRequireAuthentication() throws Exception {
+        mockMvc.perform(get("/api/chat"))
+                .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    void sortEndpoint_ShouldBePermittedForAnonymousUsers() throws Exception {
+        mockMvc.perform(get("/sort"))
+                .andExpect(status().isOk());
+    }
 }
