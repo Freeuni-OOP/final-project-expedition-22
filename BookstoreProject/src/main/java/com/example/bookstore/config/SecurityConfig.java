@@ -24,8 +24,13 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/register", "/login", "/logout", "/books", "/css/**", "/js/**",
-                        "/images/**", "/favicon.ico", "/books/details/**", "/sort", "/chat/**").permitAll()
+                        "/images/**", "/favicon.ico", "/books/details/**", "/sort", "/chat").permitAll()
+                                .requestMatchers("/api/chat/**", "/chat/**").authenticated()
                 .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .permitAll()
                 );
 
         return http.build();
