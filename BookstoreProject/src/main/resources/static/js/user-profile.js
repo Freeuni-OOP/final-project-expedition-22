@@ -66,7 +66,7 @@ function createBookCard(book, showDeleteButton, showFavoriteButton) {
         <article class="book-card" id="book-${book.id}">
             ${favoriteButton}
 
-            <a href="/books/${book.id}">
+            <a href="/books/details/${book.id}">
                 <img class="book-card__cover"
                      src="${imageUrl}"
                      alt="${book.title}">
