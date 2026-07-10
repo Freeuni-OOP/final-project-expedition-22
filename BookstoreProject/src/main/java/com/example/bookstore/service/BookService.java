@@ -208,6 +208,40 @@ public class BookService {
         bookRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
+    public List<BookResponse> searchBooksCombined(String title, String genre, Integer year) {
+        List<Book> books = bookRepository.findAll();
+
+        return books.stream()
+                .filter(book -> {
+                    if (title != null && !title.trim().isEmpty()) {
+                        return book.getTitle() != null &&
+                                book.getTitle().toLowerCase().contains(title.trim().toLowerCase());
+                    }
+                    return true;
+                })
+                .filter(book -> {
+                    if (genre != null && !genre.trim().isEmpty()) {
+                        if (book.getGenres() == null || book.getGenres().isEmpty()) {
+                            return false;
+                        }
+                        String searchGenre = genre.trim().toLowerCase();
+                        return book.getGenres().stream()
+                                .anyMatch(g -> g.getName() != null &&
+                                        g.getName().toLowerCase().contains(searchGenre));
+                    }
+                    return true;
+                })
+                .filter(book -> {
+                    if (year != null) {
+                        return book.getReleaseYear() != null && book.getReleaseYear().equals(year);
+                    }
+                    return true;
+                })
+                .map(BookResponse::new)
+                .collect(Collectors.toList());
+    }
+
 
     @Transactional
     public void addFavorite(Long userId, Long bookId) {
